@@ -2,11 +2,13 @@
 // 基于上学期 V13.1 引擎，适配第二学期 Weekly Quiz
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyR1D1HVmrmW7PHuIP-iYgSTcNFVHWBfoXpYIotWWQkXrIYVK8tc6YhzQEoGVDnxpI/exec";
 
-// ✅ 口语评分按钮描述 (沿用3分制)
+// ✅ 口语评分按钮描述 (升级为5分制)
 const SPEAKING_RUBRIC = [
-    "[1分] 只能说出零散词或明显不对应问题，需较多提示",
-    "[2分] 能作答但信息不完整或不够连贯，需少量提示",
-    "[3分] 表达清楚、信息完整、发音基本准确、几乎无需提示"
+    "[1分] 需较多提示，仅能说出零散单词",
+    "[2分] 能在提示下大致作答，但不完整",
+    "[3分] 能基本作答，有少量语法或读音错误",
+    "[4分] 表达自然，信息较完整，发音较好",
+    "[5分] 表达地道流利、信息完整、读音准确"
 ];
 
 let currentData = null;
@@ -20,7 +22,8 @@ function getSessionId() {
     const key = 'grade3_s2_quiz_session_id';
     let sid = localStorage.getItem(key);
     if (!sid) {
-        sid = `S2-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        // 增加更显眼的下学期标志
+        sid = `TERM2-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         localStorage.setItem(key, sid);
     }
     return sid;
@@ -28,7 +31,7 @@ function getSessionId() {
 
 function initEngine(mode) {
     currentMode = mode;
-    console.log("Engine Loaded: Grade 3 Second Term Weekly Quiz V1.0");
+    console.log("Engine Loaded: Grade 3 Second Term (下学期) Weekly Quiz V1.1");
 }
 
 window.LOAD_QUIZ = function (data) {
@@ -90,7 +93,7 @@ function renderQuestion() {
     }
 
     // 3. 检查当前题是否已答
-    const hasAnswered = answers['Q' + currentQid] && answers['Q' + currentQid].toString().trim() !== '';
+    const hasAnswered = answers['Q' + currentQid] !== undefined && answers['Q' + currentQid].toString().trim() !== '';
     const targetBtn = (currentQIndex === total - 1) ? btnSubmit : btnNext;
     targetBtn.disabled = !hasAnswered;
 
@@ -104,8 +107,16 @@ function renderQuestion() {
         html += `<button class="audio-btn" onclick="speak('${safeText}')">🔊 播放录音 (Listen)</button>`;
     }
 
-    if (q.imageUri) html += `<img src="img/${q.imageUri}" style="max-width:100%; border-radius:15px; margin-bottom:15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">`;
-    else if (q.imageKey && currentData.images) html += `<img src="${currentData.images[q.imageKey]}" style="max-width:100%; border-radius:15px; margin-bottom:15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">`;
+    // 修复图片路径：如果 imageUri 已包含 img/ 则不再拼接
+    if (q.imageUri) {
+        let imgSrc = q.imageUri;
+        if (!imgSrc.startsWith('http') && !imgSrc.startsWith('img/') && !imgSrc.startsWith('./img/')) {
+            imgSrc = 'img/' + imgSrc;
+        }
+        html += `<img src="${imgSrc}" style="max-width:100%; border-radius:15px; margin-bottom:15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">`;
+    } else if (q.imageKey && currentData.images) {
+        html += `<img src="${currentData.images[q.imageKey]}" style="max-width:100%; border-radius:15px; margin-bottom:15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">`;
+    }
 
     // 5. 生成选项/评分区域
     if (currentMode === 'written') {
@@ -146,12 +157,13 @@ function renderQuestion() {
             html += `<input type="text" id="fill-in-${q.qNum}" value="${currentAns}" oninput="updateFillAnswer('${q.qNum}')" class="fill-input" placeholder="请在此输入答案" style="width:90%;padding:12px;border-radius:15px;border:3px solid #b2ebf2;font-size:18px;">`;
         }
     } else {
-        // 口语评分
+        // 口语评分 (支持动态分数，默认5分)
         html += `<div class="score-row">`;
-        const maxSpeakScore = q.score || 3;
+        const maxSpeakScore = q.score || 5;
         for (let score = maxSpeakScore; score >= 1; score -= 1) {
             const active = answers['Q' + q.qNum] === score ? 'active' : '';
-            const description = (typeof SPEAKING_RUBRIC !== 'undefined') ? SPEAKING_RUBRIC[score - 1] : "";
+            // 如果分值超过默认描述范围，则不显示详细描述
+            const description = (score <= SPEAKING_RUBRIC.length) ? SPEAKING_RUBRIC[score - 1] : "";
 
             html += `
                  <div class="score-item" onclick="rate('${q.qNum}', ${score})">
@@ -273,7 +285,7 @@ function submit() {
     let maxScore = 0;
     if (currentMode === 'speaking') {
         currentData.questions.forEach(q => {
-            const qMax = q.score || 3;
+            const qMax = q.score || 5; // 下学期默认为5分
             maxScore += qMax;
             totalScore += parseInt(answers['Q' + q.qNum]) || 0;
         });
@@ -310,7 +322,8 @@ function submit() {
     const payload = {
         sessionId: getSessionId(),
         studentName: document.getElementById('studentNameDisplay').innerText,
-        lessonTitle: currentData.title,
+        // 在标题前显式加上“下学期”四个字，方便表格查看
+        lessonTitle: "[下学期] " + currentData.title,
         examType: currentMode,
         score: totalScore,
         listeningScore: currentMode === 'written' ? scoreL : "",
