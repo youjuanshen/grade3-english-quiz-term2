@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>笔试挑战 - 三年级下册</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container student-theme">
+
+        <div id="menuBox" class="card">
+            <h2>📝 笔试挑战 (下册)</h2>
+            <select id="courseSelect" onchange="loadPaper(this.value)">
+                <option value="" disabled selected>请选择课程...</option>
+
+                <optgroup label="Unit 1: Our Animal Friends">
+                    <option value="u1_l1.js">Unit 1 Lesson 1: I like cats</option>
+                    <option value="u1_l2.js">Unit 1 Lesson 2: Do you like dogs?</option>
+                </optgroup>
+
+                <optgroup label="Unit 2: My Clothes">
+                    <option value="u2_l1.js">Unit 2 Lesson 1: This is my T-shirt</option>
+                    <option value="u2_l2.js">Unit 2 Lesson 2: Whose dress is this?</option>
+                </optgroup>
+
+                <optgroup label="Unit 3: Time">
+                    <option value="u3_l1.js">Unit 3 Lesson 1: What time is it?</option>
+                    <option value="u3_l2.js">Unit 3 Lesson 2: It's time for class</option>
+                </optgroup>
+
+                <optgroup label="Unit 4: Healthy Eating">
+                    <option value="u4_l1.js">Unit 4 Lesson 1: I like milk</option>
+                    <option value="u4_l2.js">Unit 4 Lesson 2: Do you like rice?</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <div id="loadingBox" class="hidden text-center">
+            <p>正在读取试卷...</p>
+        </div>
+
+        <div id="setupBox" class="card hidden">
+            <h3 id="examTitle">...</h3>
+            <select id="studentSelector">
+                <option value="" disabled selected>我是谁？(选择名字)</option>
+            </select>
+            <button class="btn-primary" onclick="startExam()">开始答题 🚀</button>
+        </div>
+
+        <div id="quizInterface" class="hidden">
+            <div class="header-bar">
+                <span id="studentNameDisplay">Student</span>
+                <span id="timerDisplay" class="timer">00:00</span>
+            </div>
+
+            <div class="progress-bar-bg">
+                <div id="progressBar"></div>
+            </div>
+            <div id="progressText" class="text-small"></div>
+
+            <div class="card question-card">
+                <div id="qContent"></div>
+            </div>
+
+            <div class="nav-bar">
+                <button id="btnPrev" onclick="prevQ()">⬅️ 上一题</button>
+                <button id="btnNext" onclick="nextQ()">下一题 ➡️</button>
+                <button id="btnSubmit" onclick="submit()" class="btn-success hidden">✅ 交卷</button>
+            </div>
+        </div>
+
+        <div id="submittingBox" class="card hidden text-center"></div>
+        <div id="resultBox" class="card hidden text-center">
+            <h1>🎉 挑战结束</h1>
+            <h1 class="score-text" id="finalScore">?</h1>
+            <p>分</p>
+            <a href="index.html" class="btn-primary">返回大厅</a>
+        </div>
+
+    </div>
+
+    <script src="script_engine.js?v=1.0"></script>
+    <script>
+        initEngine('written');
+
+        // 📋 完整学生名单 (27人)
+        const STUDENTS = [
+            "1. 张宇豪", "2. 张佳寒", "3. 张睿渊", "4. 张羽韬", "5. 张美茹",
+            "6. 张嘉钦", "7. 卢梦婷", "8. 张悦萱", "9. 张语涵", "10. 张英豪",
+            "11. 张志鹏", "12. 张智杰", "13. 张梓婷", "14. 张品琪", "15. 张诺依",
+            "16. 张雨泽", "17. 张依彤", "18. 张艺楠", "19. 张思彤", "20. 张子豪",
+            "21. 张梓亦", "22. 张皓鑫", "23. 张雨欣", "24. 张如欣", "25. 张柏涵",
+            "26. 张梓纯", "27. 张泽鑫"
+        ];
+
+        const sel = document.getElementById('studentSelector');
+        STUDENTS.forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.innerText = name;
+            sel.appendChild(opt);
+        });
+    </script>
+
+</body>
+
+</html>
