@@ -1,19 +1,22 @@
 /**
- * ✍️ Unit 4 Lesson 2: Do you like rice? (Healthy Eating)
+ * ✍️ Unit 4 Lesson 2: Do you like rice?
  * 闽教版三年级下册 2025春季版
  */
 window.LOAD_QUIZ({
     title: "Unit 4 Lesson 2: Do you like rice?",
-    timeLimit: 540,
+    timeLimit: 600,
 
     questions: [
+        // ===========================
         // Part A: Listening
+        // ===========================
         {
             qNum: 1, part: 'A', type: 'select',
             text: '听录音，选出正确的回答。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
             audioText: 'Do you like rice?',
             options: ['A. Yes, I do.', 'B. It is rice.', 'C. I am rice.', 'D. Thank you.'],
-            correct: 'A. Yes, I do.'
+            correct: 'A. Yes, I do.',
+            imageUri: 'img/rice.png'
         },
         {
             qNum: 2, part: 'A', type: 'select',
@@ -27,7 +30,8 @@ window.LOAD_QUIZ({
             text: '听录音选词填空：Do you like ______?<br><span style="font-size:14px;color:#666">(Listen and complete)</span>',
             audioText: 'Do you like fish?',
             options: ['A. rice', 'B. bread', 'C. fish', 'D. milk'],
-            correct: 'C. fish'
+            correct: 'C. fish',
+            imageUri: 'img/fish.png'
         },
         {
             qNum: 4, part: 'A', type: 'select',
@@ -44,7 +48,9 @@ window.LOAD_QUIZ({
             correct: 'C. noodles'
         },
 
+        // ===========================
         // Part B: Reading
+        // ===========================
         {
             qNum: 6, part: 'B', type: 'select',
             text: '"noodles" 的中文是什么？',
@@ -76,36 +82,70 @@ window.LOAD_QUIZ({
             correct: 'B. 水果'
         },
 
+        // ===========================
         // Part C: Writing
+        // ===========================
         {
             qNum: 11, part: 'C', type: 'select',
-            text: '补全单词：n _ _ d l e s (面条)',
+            text: '补全单词：n _ _ d l e s',
             options: ['A. oo', 'B. ee', 'C. ii', 'D. aa'],
             correct: 'A. oo'
         },
         {
             qNum: 12, part: 'C', type: 'drag-sort',
-            text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder the sentence)</span>',
+            text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder)</span>',
             words: ['Do', 'you', 'like', 'rice', '?'],
             correct: 'Do you like rice?'
         },
         {
             qNum: 13, part: 'C', type: 'select',
-            text: '补全单词：f _ s h (鱼)',
+            text: '补全单词：f _ s h',
             options: ['A. a', 'B. e', 'C. i', 'D. o'],
-            correct: 'C. i'
+            correct: 'C. i',
+            imageUri: 'img/fish.png'
         },
         {
             qNum: 14, part: 'C', type: 'drag-sort',
-            text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder the sentence)</span>',
+            text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder)</span>',
             words: ['No', ',', 'I', 'don\'t', '.'],
             correct: 'No , I don\'t.'
         },
         {
             qNum: 15, part: 'C', type: 'select',
-            text: '选出正确的拼写（蔬菜）。',
+            text: '选出正确的拼写。',
             options: ['A. vegetabels', 'B. vegitables', 'C. vegetables', 'D. vegatables'],
             correct: 'C. vegetables'
+        },
+
+        // ===========================
+        // Part D: Speaking
+        // ===========================
+        {
+            qNum: 16, part: 'D',
+            text: '读出句子：Do you like rice?',
+            imageUri: 'img/rice.png',
+            score: 5
+        },
+        {
+            qNum: 17, part: 'D',
+            text: '看图说话：I like noodles and fish.',
+            imageUri: 'img/fish.png',
+            score: 5
+        },
+        {
+            qNum: 18, part: 'D',
+            text: '回答问题：Do you like vegetables?',
+            score: 5
+        },
+        {
+            qNum: 19, part: 'D',
+            text: '读出单词：Fruit, Vegetables, Noodles.',
+            score: 5
+        },
+        {
+            qNum: 20, part: 'D',
+            text: '自我表达：说出三种你喜欢的食物。',
+            score: 5
         }
     ]
 });
