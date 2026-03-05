@@ -1,4 +1,6 @@
-// ================= 全局配置 (三年级下册 Weekly Quiz V2.0 - 综合面试版) =================
+// ==================================================================
+// 🐾 script_engine.js V2.2 - 三年级下册专用 (25/25/25/25 科学权重版)
+// ==================================================================
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyR1D1HVmrmW7PHuIP-iYgSTcNFVHWBfoXpYIotWWQkXrIYVK8tc6YhzQEoGVDnxpI/exec";
 
 const SPEAKING_RUBRIC = [
@@ -10,12 +12,11 @@ const SPEAKING_RUBRIC = [
 ];
 
 let currentData = null;
-let currentMode = 'composite'; // 默认为综合模式
+let currentMode = 'written'; // 'written' 或 'speaking'
 let currentQIndex = 0;
 let answers = {};
 let timerInterval;
 let timeLeft = 0;
-let isSpeakingPhase = false; // 是否进入了口语面试阶段
 
 function getSessionId() {
     const key = 'grade3_s2_quiz_session_id';
@@ -29,20 +30,17 @@ function getSessionId() {
 
 function initEngine(mode) {
     currentMode = mode;
-    console.log("Engine Loaded: Grade 3 Second Term Integrated Quiz V2.1");
+    console.log("Engine Loaded: Grade 3 S2 [" + mode + "] Mode V2.2");
 
-    // --- 新增：自动加载功能 (解决学生不会点课的问题) ---
+    // 自动加载逻辑
     const urlParams = new URLSearchParams(window.location.search);
     const autoLesson = urlParams.get('lesson');
-    if (autoLesson) {
-        console.log("检测到指定课程，自动加载:", autoLesson);
-        loadPaper(autoLesson);
-    }
+    if (autoLesson) { loadPaper(autoLesson); }
 }
 
 window.LOAD_QUIZ = function (data) {
     currentData = data;
-    timeLeft = data.timeLimit || 540;
+    timeLeft = data.timeLimit || 600;
     const titleEl = document.getElementById('examTitle');
     if (titleEl) titleEl.innerText = data.title;
     toggleDisplay('loadingBox', false);
@@ -53,19 +51,14 @@ window.LOAD_QUIZ = function (data) {
 function loadPaper(path) {
     toggleDisplay('loadingBox', true);
     const script = document.createElement('script');
-    // 综合模式下统一读取 written 文件夹的数据，因为 written 数据里通常包含或引申口语
-    // 注意：如果您的 speaking 数据和 written 数据是完全不同的文件，建议合成一个
-    // 目前我先把所有逻辑统一到 written 数据里处理
-    let folder = 'data/written/';
-    if (path.indexOf('/') === -1) { script.src = folder + path; } else { script.src = path; }
-    script.src += "?t=" + new Date().getTime();
-    script.onerror = () => { alert("❌ 文件未找到: " + script.src); location.reload(); };
+    script.src = "data/written/" + path + "?t=" + Date.now();
+    script.onerror = () => { alert("❌ 文件未找到: " + path); location.reload(); };
     document.body.appendChild(script);
 }
 
 function startExam() {
     const studentName = document.getElementById('selectedStudentName').value;
-    if (!studentName) { alert("请先点击选择你的名字！"); return; }
+    if (!studentName) { alert("请先点击选择名字！"); return; }
 
     toggleDisplay('setupBox', false);
     toggleDisplay('quizInterface', true);
@@ -73,42 +66,39 @@ function startExam() {
 
     currentQIndex = 0;
     answers = {};
-    isSpeakingPhase = false;
     renderQuestion();
-    startTimer();
+    if (currentMode === 'written') startTimer();
 }
 
 // ================= ⭐ 核心渲染逻辑 ⭐ =================
 function renderQuestion() {
-    // 过滤题目：如果是笔试阶段，只看 Part A/B/C；如果是口语阶段，只看 Part D
-    const allQuestions = currentData.questions;
+    const allQs = currentData.questions;
 
-    // 如果没有 Part D 却进入了面试阶段（防错）
-    const hasSpeakingQuestions = allQuestions.some(q => q.part === 'D');
+    // 过滤逻辑：笔试模式只看 A/B/C，口语模式只看 D
+    const relevantQs = allQs.filter(q => {
+        if (currentMode === 'written') return q.part === 'A' || q.part === 'B' || q.part === 'C';
+        return q.part === 'D';
+    });
 
-    // 自动判断当前题目是否属于当前阶段
-    const q = allQuestions[currentQIndex];
-
-    // 如果已经做完笔试，且当前题目是口语题，但还没触发“移交老师”界面
-    if (q.part === 'D' && !isSpeakingPhase) {
-        showTeacherHandover();
+    if (relevantQs.length === 0) {
+        document.getElementById('qContent').innerHTML = "<p style='padding:20px;'>本课暂无该部分的题目。</p>";
         return;
     }
 
-    const total = allQuestions.length;
+    // 确保 index 不越界
+    if (currentQIndex >= relevantQs.length) currentQIndex = relevantQs.length - 1;
+    const q = relevantQs[currentQIndex];
 
-    // 1. 更新进度条
-    document.getElementById('progressText').innerText = `第 ${currentQIndex + 1} 题 / 共 ${total} 题 (${q.part})`;
-    document.getElementById('progressBar').style.width = `${((currentQIndex + 1) / total) * 100}%`;
+    // 更新进度条
+    document.getElementById('progressText').innerText = `Part ${q.part} | 第 ${currentQIndex + 1} 题 / 共 ${relevantQs.length} 题`;
+    document.getElementById('progressBar').style.width = `${((currentQIndex + 1) / relevantQs.length) * 100}%`;
 
-    // 2. 导航按钮
     const btnPrev = document.getElementById('btnPrev');
     const btnNext = document.getElementById('btnNext');
     const btnSubmit = document.getElementById('btnSubmit');
 
     btnPrev.disabled = (currentQIndex === 0);
-
-    if (currentQIndex === total - 1) {
+    if (currentQIndex === relevantQs.length - 1) {
         toggleDisplay('btnNext', false);
         toggleDisplay('btnSubmit', true);
     } else {
@@ -116,54 +106,47 @@ function renderQuestion() {
         toggleDisplay('btnSubmit', false);
     }
 
-    // 3. 检查当前题是否已答
-    const hasAnswered = answers['Q' + q.qNum] !== undefined && answers['Q' + q.qNum].toString().trim() !== '';
-    const targetBtn = (currentQIndex === total - 1) ? btnSubmit : btnNext;
+    const hasAnswered = answers['Q' + q.qNum] !== undefined;
+    const targetBtn = (currentQIndex === relevantQs.length - 1) ? btnSubmit : btnNext;
     targetBtn.disabled = !hasAnswered;
 
-    // 4. 生成题目内容
     let html = '';
-    const partNames = { 'A': 'Listening (听力)', 'B': 'Reading (阅读)', 'C': 'Writing (写作)', 'D': 'Speaking (口语面试)' };
-    html += `<div style="font-size:12px; color:#2196F3; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">${partNames[q.part] || 'Part ' + q.part}</div>`;
+    const partMap = { 'A': 'Listening 听力', 'B': 'Reading 阅读', 'C': 'Writing 写作', 'D': 'Speaking 口语面试' };
+    html += `<div class="part-tag">${partMap[q.part] || 'Part ' + q.part}</div>`;
     html += `<h3 class="q-text">${q.qNum}. ${q.text}</h3>`;
 
     if (q.audioText) {
-        const safeText = q.audioText.replace(/'/g, "\\'");
-        html += `<button class="audio-btn" onclick="speak('${safeText}')">🔊 播放录音 (Listen)</button>`;
+        html += `<button class="audio-btn" onclick="speak('${q.audioText.replace(/'/g, "\\'")}')">🔊 播放录音 (Listen)</button>`;
     }
 
     if (q.imageUri) {
         let imgSrc = q.imageUri;
-        if (!imgSrc.startsWith('http') && !imgSrc.startsWith('img/') && !imgSrc.startsWith('./img/')) imgSrc = 'img/' + imgSrc;
-        html += `<img src="${imgSrc}" style="max-width:100%; border-radius:15px; margin-bottom:15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">`;
+        if (!imgSrc.startsWith('http') && !imgSrc.startsWith('img/')) imgSrc = 'img/' + imgSrc;
+        html += `<div class="q-img-box"><img src="${imgSrc}" class="q-img"></div>`;
     }
 
-    // 5. 生成选项区域
     if (q.part !== 'D') {
-        // 笔试题型 (Select / Drag / Fill)
+        // 笔试题型
         if (q.type === 'select' || !q.type) {
             html += `<div class="options-list">`;
             q.options.forEach(opt => {
-                let displayContent = opt;
-                let val = opt;
-                if (opt.startsWith('image:')) {
-                    let imgKey = opt.split(':')[1].trim();
-                    displayContent = `<img src="img/${imgKey}.png" class="opt-img" style="height:60px; vertical-align:middle">`;
-                }
-                const isSelected = answers['Q' + q.qNum] === val ? 'selected' : '';
-                html += `<div class="option-item ${isSelected}" onclick="choose('${q.qNum}', '${val}')">${displayContent}</div>`;
+                const isSelected = answers['Q' + q.qNum] === opt ? 'selected' : '';
+                html += `<div class="option-item ${isSelected}" onclick="choose('${q.qNum}', '${opt.replace(/'/g, "\\'")}')">${opt}</div>`;
             });
             html += `</div>`;
         } else if (q.type === 'drag-sort') {
             html += `<div style="margin:10px 0; color:#666; font-size:14px;">(点击单词进行排序)</div>`;
-            html += `<div class="drag-area" id="target-${q.qNum}"></div><div class="drag-area" id="source-${q.qNum}">`;
-            q.words.forEach(w => html += `<span class="word-chip" onclick="moveWord(this, 'target-${q.qNum}', 'source-${q.qNum}', '${q.qNum}')">${w}</span>`);
+            html += `<div class="drag-area" id="target-${q.qNum}">${(answers['Q' + q.qNum] || "").split(' ').filter(x => x).map(w => `<span class="word-chip active">${w}</span>`).join('')}</div>`;
+            html += `<div class="drag-area" id="source-${q.qNum}">`;
+            let remaining = [...q.words];
+            (answers['Q' + q.qNum] || "").split(' ').forEach(w => { let i = remaining.indexOf(w); if (i > -1) remaining.splice(i, 1); });
+            remaining.forEach(w => html += `<span class="word-chip" onclick="moveWord(this, 'target-${q.qNum}', 'source-${q.qNum}', '${q.qNum}')">${w}</span>`);
             html += `</div>`;
         } else if (q.type === 'fill') {
-            html += `<input type="text" oninput="updateFillAnswer('${q.qNum}')" class="fill-input" placeholder="输入答案">`;
+            html += `<input type="text" class="fill-input" value="${answers['Q' + q.qNum] || ''}" oninput="updateFill('${q.qNum}')" placeholder="在此输入答案">`;
         }
     } else {
-        // 口语题型 (5分制)
+        // 口语评分
         html += `<div class="score-row">`;
         for (let s = 5; s >= 1; s--) {
             const active = answers['Q' + q.qNum] === s ? 'active' : '';
@@ -174,68 +157,32 @@ function renderQuestion() {
     document.getElementById('qContent').innerHTML = html;
 }
 
-function showTeacherHandover() {
-    const html = `
-        <div style="text-align:center; padding:20px;">
-            <div style="font-size:50px; margin-bottom:20px;">👋</div>
-            <h2 style="color:#ff5722;">笔试部分已完成！</h2>
-            <p style="font-size:18px; color:#666;">请带着设备去找 <b>沈老师 (Merry)</b></p>
-            <p>老师点击下方按钮开始面试：</p>
-            <button class="btn-primary" style="background:#ff5722; padding:20px 40px; font-size:22px;" onclick="startSpeakingPhase()">老师已就位，开始口试 💬</button>
-        </div>
-    `;
-    document.getElementById('qContent').innerHTML = html;
-    toggleDisplay('btnNext', false);
-    toggleDisplay('btnSubmit', false);
-    toggleDisplay('btnPrev', false);
-}
-
-function startSpeakingPhase() {
-    isSpeakingPhase = true;
-    renderQuestion();
-}
-
-// 🔥 核心评分算法：25/25/25/25 权重 🔥
-function calculateTotalScore() {
-    let parts = {
-        'A': { correct: 0, total: 0 },
-        'B': { correct: 0, total: 0 },
-        'C': { correct: 0, total: 0 },
-        'D': { score: 0, max: 0 }
-    };
+// 🔥 核心评分算法 🔥
+function calculateSubmissionScore() {
+    let parts = { 'A': { c: 0, t: 0 }, 'B': { c: 0, t: 0 }, 'C': { c: 0, t: 0 }, 'D': { s: 0, m: 0, t: 0 } };
 
     currentData.questions.forEach(q => {
         if (q.part === 'D') {
-            parts['D'].total++;
-            parts['D'].score += parseInt(answers['Q' + q.qNum]) || 0;
-            parts['D'].max += 5;
+            parts['D'].t++;
+            parts['D'].s += parseInt(answers['Q' + q.qNum]) || 0;
+            parts['D'].m += 5;
         } else {
-            parts[q.part].total++;
-            const userVal = (answers['Q' + q.qNum] || "").toString().toLowerCase().trim().replace(/[.,?!]/g, '');
-            const correctVal = q.correct.toString().toLowerCase().trim().replace(/[.,?!]/g, '');
-            if (userVal === correctVal) {
-                parts[q.part].correct++;
-            }
+            parts[q.part].t++;
+            let user = (answers['Q' + q.qNum] || "").toString().toLowerCase().trim().replace(/[.,?!]/g, '');
+            let correct = (q.correct || "MISSING").toString().toLowerCase().trim().replace(/[.,?!]/g, '');
+            if (user === correct) parts[q.part].c++;
         }
     });
 
-    // 计算各部分百分率，如果没有该部分题目，默认给满分比率(1.0)还是0？
-    // 教学上通常如果没有口语，那就按三部分分摊，但这里强制要求 25/25/25/25 的话，
-    // 如果没有 Part D，那 Part D 自动得 0 分，总分最高 75。
-    // 为了防止出现 0%，我们加个保护。
-    const getPartScore = (p) => {
-        if (parts[p].total === 0 && p !== 'D') return 25; // 如果没这部分题目，默认给这部分满分（或根据需求调整）
-        if (p === 'D') {
-            return parts['D'].max > 0 ? Math.round((parts['D'].score / parts['D'].max) * 25) : 0;
-        } else {
-            return parts[p].total > 0 ? Math.round((parts[p].correct / parts[p].total) * 25) : 0;
-        }
+    const getPScore = (p) => {
+        if (p === 'D') return parts['D'].m > 0 ? (parts['D'].s / parts['D'].m) * 25 : 0;
+        return parts[p].t > 0 ? (parts[p].c / parts[p].t) * 25 : 0;
     };
 
-    const scA = getPartScore('A');
-    const scB = getPartScore('B');
-    const scC = getPartScore('C');
-    const scD = getPartScore('D');
+    let scA = Math.round(getPScore('A'));
+    let scB = Math.round(getPScore('B'));
+    let scC = Math.round(getPScore('C'));
+    let scD = Math.round(getPScore('D'));
 
     return { total: scA + scB + scC + scD, A: scA, B: scB, C: scC, D: scD };
 }
@@ -245,17 +192,17 @@ function submit() {
     toggleDisplay('quizInterface', false);
     toggleDisplay('submittingBox', true);
 
-    const results = calculateTotalScore();
+    const results = calculateSubmissionScore();
     const studentName = document.getElementById('studentNameDisplay').innerText;
 
-    // 打印调试，防止上传 0%
-    console.log("Submission Debug:", results, answers);
+    // 如果是口试模式，上传类型设为 [加考-口语]
+    const typeLabel = currentMode === 'written' ? "[笔试]" : "[口试]";
 
     const payload = {
         sessionId: getSessionId(),
         studentName: studentName,
-        lessonTitle: "[综合挑战] " + currentData.title,
-        examType: "Integrated-S2",
+        lessonTitle: typeLabel + " " + currentData.title,
+        examType: "Grade3-S2-" + currentMode,
         score: results.total,
         listeningScore: results.A,
         readingScore: results.B,
@@ -263,54 +210,59 @@ function submit() {
         speakingScore: results.D
     };
 
-    const queryParams = Object.keys(payload).map(k => k + '=' + encodeURIComponent(payload[k])).join('&');
-    const fullUrl = GOOGLE_SCRIPT_URL + '?' + queryParams;
+    console.log("Submitting payload:", payload);
 
-    fetch(fullUrl, { method: 'GET', mode: 'no-cors' })
-        .then(() => {
-            console.log("Upload Success");
-            showFinalResult(results.total, studentName);
-        })
-        .catch(err => {
-            console.error("Upload Failed:", err);
-            showFinalResult(results.total, studentName, false);
-        });
+    const query = Object.keys(payload).map(k => k + '=' + encodeURIComponent(payload[k])).join('&');
+    fetch(GOOGLE_SCRIPT_URL + '?' + query, { method: 'GET', mode: 'no-cors' })
+        .then(() => showFinalUI(results, studentName))
+        .catch(err => { console.error(err); showFinalUI(results, studentName, false); });
 }
 
-function showFinalResult(score, name, success = true) {
+function showFinalUI(results, name, success = true) {
     toggleDisplay('submittingBox', false);
-    const resultBox = document.getElementById('resultBox');
+    const box = document.getElementById('resultBox');
 
-    let feedback = score >= 90 ? "👑 太完美了！你是闪耀的英语之星！" : (score >= 80 ? "🌟 真棒！成绩非常出色！" : (score >= 60 ? "👍 很不错！继续加油会更强！" : "🌱 别气馁，多读多听一定能进步！"));
+    let scoreDisplay = currentMode === 'written' ? (results.A + results.B + results.C) : results.D;
+    let maxDisplay = currentMode === 'written' ? 75 : 25;
 
-    resultBox.innerHTML = `
+    let handoverNote = currentMode === 'written' ?
+        `<div style="background:#fff3e0; padding:15px; border-radius:15px; border:2px dashed #ff9800; margin:20px 0;">
+            <p style="color:#e65100; font-weight:bold; font-size:18px;">🎉 笔试挑战成功！</p>
+            <p style="color:#666;">现在，请带着设备去找 <b>沈老师 (Merry)</b><br>进行最后的口语面试哦！</p>
+        </div>` :
+        `<div style="background:#e8f5e9; padding:15px; border-radius:15px; border:2px dashed #4caf50; margin:20px 0;">
+            <p style="color:#2e7d32; font-weight:bold; font-size:18px;">🌟 口语面试结束！</p>
+            <p style="color:#666;">你表现得非常棒，继续加油！</p>
+        </div>`;
+
+    box.innerHTML = `
         <div class="score-summary">
-            <h1>🎉 挑战圆满结束！</h1>
-            <div style="font-size:24px; color:#333; margin:20px 0;">
-                <span style="color:#2196F3; font-weight:bold;">${name}</span> 同学
+            <h1 style="color:#2196F3;">${name} 同学</h1>
+            <div style="font-size:16px; color:#666;">本次${currentMode === 'written' ? '笔试' : '口试'}得分</div>
+            <div style="font-size:60px; color:#f44336; font-weight:bold; margin:10px 0;">
+                ${scoreDisplay}<span style="font-size:20px; color:#999;"> / ${maxDisplay}</span>
             </div>
-            <div style="font-size:16px; color:#666;">你的最终总分</div>
-            <div class="big-score" style="font-size:80px; color:#4caf50; font-weight:bold; margin:10px 0;">
-                ${score}<span style="font-size:20px; color:#999;"> / 100 分</span>
-            </div>
-            <div class="feedback-box" style="background:#e8f5e9; padding:15px; border-radius:15px; color:#2e7d32; margin-bottom:20px;">
-                ${feedback}
-            </div>
-            ${success ? '<p style="color:green;">✅ 成绩已同步至后台</p>' : '<p style="color:red;">⚠️ 成绩同步失败，请告知老师</p>'}
-            <button class="btn-primary" onclick="location.reload()" style="width:100%; font-size:18px;">返回首页 🏠</button>
+            ${handoverNote}
+            <button class="btn-primary" onclick="location.reload()" style="width:100%;">返回首页 🏠</button>
         </div>
     `;
     toggleDisplay('resultBox', true);
 }
 
-// 辅助函数保持原样但微调
-function choose(qid, val) { answers['Q' + qid] = val; renderQuestion(); }
+// 辅助函数
+function choose(qid, v) { answers['Q' + qid] = v; renderQuestion(); }
 function rate(qid, s) { answers['Q' + qid] = s; renderQuestion(); }
 function prevQ() { if (currentQIndex > 0) { currentQIndex--; renderQuestion(); } }
-function nextQ() { if (currentQIndex < currentData.questions.length - 1) { currentQIndex++; renderQuestion(); } }
+function nextQ() { if (currentQIndex < 50) { currentQIndex++; renderQuestion(); } } // 防超限
+function updateFill(qid) { answers['Q' + qid] = event.target.value.trim(); renderQuestion(); }
+function moveWord(el, tid, sid, qid) {
+    const t = document.getElementById(tid);
+    if (el.parentElement.id === sid) t.appendChild(el); else document.getElementById(sid).appendChild(el);
+    answers['Q' + qid] = Array.from(t.children).map(s => s.innerText).join(' ');
+    renderQuestion();
+}
 function toggleDisplay(id, show) {
-    const el = document.getElementById(id);
-    if (!el) return;
+    const el = document.getElementById(id); if (!el) return;
     el.style.display = show ? 'block' : 'none';
     if (show) el.classList.remove('hidden'); else el.classList.add('hidden');
 }
@@ -326,23 +278,5 @@ function startTimer() {
 function speak(text) {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-US'; u.rate = 0.8;
-    window.speechSynthesis.speak(u);
-}
-function moveWord(el, targetId, sourceId, qid) {
-    const target = document.getElementById(targetId);
-    const source = document.getElementById(sourceId);
-    if (el.parentElement === source) target.appendChild(el); else source.appendChild(el);
-    const sentence = Array.from(target.children).map(span => span.innerText).join(' ');
-    answers['Q' + qid] = sentence;
-    const total = currentData.questions.length;
-    const targetBtn = (currentQIndex === total - 1) ? document.getElementById('btnSubmit') : document.getElementById('btnNext');
-    targetBtn.disabled = (sentence.length === 0);
-}
-function updateFillAnswer(qid) {
-    const val = event.target.value.trim();
-    answers['Q' + qid] = val;
-    const total = currentData.questions.length;
-    const targetBtn = (currentQIndex === total - 1) ? document.getElementById('btnSubmit') : document.getElementById('btnNext');
-    targetBtn.disabled = (val.length === 0);
+    u.lang = 'en-US'; u.rate = 0.8; window.speechSynthesis.speak(u);
 }

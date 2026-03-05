@@ -13,9 +13,9 @@
     <div class="container teacher-theme">
 
         <div id="menuBox" class="card">
-            <h2>🗣️ 口语面试 <span class="semester-tag">下学期 · 2025春</span></h2>
+            <h2>🗣️ 口语面试 <span class="semester-tag">下学期版</span></h2>
+            <p style="color:#666;">请在面试位为学生打分：</p>
             <div class="course-container">
-                <!-- Unit 1 -->
                 <div class="unit-card">
                     <span class="unit-title">Unit 1: Our Animal Friends</span>
                     <div class="lesson-btn-group">
@@ -25,89 +25,57 @@
                         <div class="lesson-btn" onclick="selectLesson(this, 'u1_l4.js')">L4: Unit Review</div>
                     </div>
                 </div>
-                <!-- Unit 2 -->
                 <div class="unit-card">
                     <span class="unit-title">Unit 2: My Clothes</span>
                     <div class="lesson-btn-group">
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u2_l1.js')">L1: This is my T-shirt</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u2_l2.js')">L2: Whose dress is this?</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u2_l3.js')">L3: Dress Up</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u2_l4.js')">L4: Unit Review</div>
-                    </div>
-                </div>
-                <!-- Unit 3 -->
-                <div class="unit-card">
-                    <span class="unit-title">Unit 3: Time</span>
-                    <div class="lesson-btn-group">
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u3_l1.js')">L1: What time is it?</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u3_l2.js')">L2: It's time for class</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u3_l3.js')">L3: My Day</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u3_l4.js')">L4: Unit Review</div>
-                    </div>
-                </div>
-                <!-- Unit 4 -->
-                <div class="unit-card">
-                    <span class="unit-title">Unit 4: Healthy Eating</span>
-                    <div class="lesson-btn-group">
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u4_l1.js')">L1: I like milk</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u4_l2.js')">L2: Do you like rice?</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u4_l3.js')">L3: Delicious Food</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u4_l4.js')">L4: Unit Review</div>
+                        <div class="lesson-btn" onclick="selectLesson(this, 'u2_l1.js')">L1: My T-shirt</div>
+                        <div class="lesson-btn" onclick="selectLesson(this, 'u2_l2.js')">L2: Whose dress?</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div id="loadingBox" class="hidden text-center">
-            <p>正在读取题库...</p>
+            <p>加载题库中...</p>
         </div>
 
         <div id="setupBox" class="card hidden">
             <h3 id="examTitle">...</h3>
-            <p style="text-align:center; color:#666;">选择面试学生：</p>
+            <p style="text-align:center; color:#666;">选择面前的学生：</p>
             <div id="studentGrid" class="student-grid"></div>
             <input type="hidden" id="selectedStudentName" value="">
-            <button class="btn-primary" id="startBtn" onclick="startExam()" style="margin-top:20px;" disabled>开始考核
-                💬</button>
+            <button class="btn-primary" id="startBtn" onclick="startExam()" style="margin-top:20px; width:100%;"
+                disabled>开始面试打分 🎤</button>
         </div>
 
         <div id="quizInterface" class="hidden">
             <div class="header-bar">
                 <span id="studentNameDisplay">Student</span>
-                <span id="timerDisplay" class="timer">05:00</span>
+                <span class="timer">面试中</span>
             </div>
-
             <div class="progress-bar-bg">
                 <div id="progressBar"></div>
             </div>
             <div id="progressText" class="text-small"></div>
-
             <div class="card question-card">
                 <div id="qContent"></div>
             </div>
-
             <div class="nav-bar">
                 <button id="btnPrev" onclick="prevQ()">⬅️ 上一题</button>
                 <button id="btnNext" onclick="nextQ()">下一题 ➡️</button>
-                <button id="btnSubmit" onclick="submit()" class="btn-success hidden">结束打分 (Submit)</button>
+                <button id="btnSubmit" onclick="submit()" class="btn-success hidden">✅ 提交分数</button>
             </div>
         </div>
 
-        <div id="submittingBox" class="card hidden text-center"></div>
-        <div id="resultBox" class="card hidden text-center">
-            <h1>完成</h1>
-            <h1 class="score-text" id="finalScore">?</h1>
-            <p>分</p>
-            <a href="speaking.html" class="btn-primary">下一位同学</a>
-        </div>
+        <div id="submittingBox" class="card hidden text-center">正在保存成绩...</div>
+        <div id="resultBox" class="card hidden text-center"></div>
 
     </div>
 
-    <script src="script_engine.js?v=1.2"></script>
+    <script src="script_engine.js?v=2.2"></script>
     <script>
         initEngine('speaking');
 
-        // 📋 学生名单
         const STUDENTS = [
             "1. 张宇豪", "2. 张佳寒", "3. 张睿渊", "4. 张羽韬", "5. 张美茹",
             "6. 张嘉钦", "7. 卢梦婷", "8. 张悦萱", "9. 张语涵", "10. 张英豪",
@@ -136,20 +104,7 @@
             el.classList.add('active');
             loadPaper(path);
         }
-
-        window.startExam = function () {
-            const name = document.getElementById('selectedStudentName').value;
-            if (!name) { alert("请点击选择学生！"); return; }
-            document.getElementById('studentNameDisplay').innerText = name;
-            toggleDisplay('setupBox', false);
-            toggleDisplay('quizInterface', true);
-            currentQIndex = 0;
-            answers = {};
-            renderQuestion();
-            startTimer();
-        };
     </script>
-
 </body>
 
 </html>
