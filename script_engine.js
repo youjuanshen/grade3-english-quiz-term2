@@ -29,7 +29,15 @@ function getSessionId() {
 
 function initEngine(mode) {
     currentMode = mode;
-    console.log("Engine Loaded: Grade 3 Second Term (下学期) Integrated Quiz V2.0");
+    console.log("Engine Loaded: Grade 3 Second Term Integrated Quiz V2.1");
+
+    // --- 新增：自动加载功能 (解决学生不会点课的问题) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoLesson = urlParams.get('lesson');
+    if (autoLesson) {
+        console.log("检测到指定课程，自动加载:", autoLesson);
+        loadPaper(autoLesson);
+    }
 }
 
 window.LOAD_QUIZ = function (data) {
@@ -56,11 +64,13 @@ function loadPaper(path) {
 }
 
 function startExam() {
-    const student = document.getElementById('selectedStudentName').value;
-    if (!student) { alert("请先点击选择名字！"); return; }
+    const studentName = document.getElementById('selectedStudentName').value;
+    if (!studentName) { alert("请先点击选择你的名字！"); return; }
+
     toggleDisplay('setupBox', false);
     toggleDisplay('quizInterface', true);
-    document.getElementById('studentNameDisplay').innerText = student;
+    document.getElementById('studentNameDisplay').innerText = studentName;
+
     currentQIndex = 0;
     answers = {};
     isSpeakingPhase = false;
@@ -187,44 +197,65 @@ function startSpeakingPhase() {
 
 // 🔥 核心评分算法：25/25/25/25 权重 🔥
 function calculateTotalScore() {
-    let parts = { 'A': { correct: 0, total: 0 }, 'B': { correct: 0, total: 0 }, 'C': { correct: 0, total: 0 }, 'D': { score: 0, max: 0 } };
+    let parts = {
+        'A': { correct: 0, total: 0 },
+        'B': { correct: 0, total: 0 },
+        'C': { correct: 0, total: 0 },
+        'D': { score: 0, max: 0 }
+    };
 
     currentData.questions.forEach(q => {
         if (q.part === 'D') {
-            parts['D'].total += 1;
+            parts['D'].total++;
             parts['D'].score += parseInt(answers['Q' + q.qNum]) || 0;
             parts['D'].max += 5;
         } else {
-            parts[q.part].total += 1;
-            const userAns = (answers['Q' + q.qNum] || "").toLowerCase().trim().replace(/[.,?!]/g, '');
-            const correctAns = q.correct.toLowerCase().trim().replace(/[.,?!]/g, '');
-            if (userAns === correctAns) parts[q.part].correct += 1;
+            parts[q.part].total++;
+            const userVal = (answers['Q' + q.qNum] || "").toString().toLowerCase().trim().replace(/[.,?!]/g, '');
+            const correctVal = q.correct.toString().toLowerCase().trim().replace(/[.,?!]/g, '');
+            if (userVal === correctVal) {
+                parts[q.part].correct++;
+            }
         }
     });
 
-    const getPartPercent = (p) => parts[p].total > 0 ? (p === 'D' ? (parts[p].score / parts[p].max) : (parts[p].correct / parts[p].total)) : 0;
+    // 计算各部分百分率，如果没有该部分题目，默认给满分比率(1.0)还是0？
+    // 教学上通常如果没有口语，那就按三部分分摊，但这里强制要求 25/25/25/25 的话，
+    // 如果没有 Part D，那 Part D 自动得 0 分，总分最高 75。
+    // 为了防止出现 0%，我们加个保护。
+    const getPartScore = (p) => {
+        if (parts[p].total === 0 && p !== 'D') return 25; // 如果没这部分题目，默认给这部分满分（或根据需求调整）
+        if (p === 'D') {
+            return parts['D'].max > 0 ? Math.round((parts['D'].score / parts['D'].max) * 25) : 0;
+        } else {
+            return parts[p].total > 0 ? Math.round((parts[p].correct / parts[p].total) * 25) : 0;
+        }
+    };
 
-    const scoreA = Math.round(getPartPercent('A') * 25);
-    const scoreB = Math.round(getPartPercent('B') * 25);
-    const scoreC = Math.round(getPartPercent('C') * 25);
-    const scoreD = Math.round(getPartPercent('D') * 25);
+    const scA = getPartScore('A');
+    const scB = getPartScore('B');
+    const scC = getPartScore('C');
+    const scD = getPartScore('D');
 
-    return { total: scoreA + scoreB + scoreC + scoreD, A: scoreA, B: scoreB, C: scoreC, D: scoreD };
+    return { total: scA + scB + scC + scD, A: scA, B: scB, C: scC, D: scD };
 }
 
 function submit() {
-    clearInterval(timerInterval);
+    if (timerInterval) clearInterval(timerInterval);
     toggleDisplay('quizInterface', false);
     toggleDisplay('submittingBox', true);
 
     const results = calculateTotalScore();
     const studentName = document.getElementById('studentNameDisplay').innerText;
 
+    // 打印调试，防止上传 0%
+    console.log("Submission Debug:", results, answers);
+
     const payload = {
         sessionId: getSessionId(),
         studentName: studentName,
-        lessonTitle: "[下学期] " + currentData.title,
-        examType: "Integrated",
+        lessonTitle: "[综合挑战] " + currentData.title,
+        examType: "Integrated-S2",
         score: results.total,
         listeningScore: results.A,
         readingScore: results.B,
@@ -233,9 +264,17 @@ function submit() {
     };
 
     const queryParams = Object.keys(payload).map(k => k + '=' + encodeURIComponent(payload[k])).join('&');
-    fetch(GOOGLE_SCRIPT_URL + '?' + queryParams, { method: 'GET', mode: 'no-cors' })
-        .then(() => showFinalResult(results.total, studentName))
-        .catch(() => showFinalResult(results.total, studentName, false));
+    const fullUrl = GOOGLE_SCRIPT_URL + '?' + queryParams;
+
+    fetch(fullUrl, { method: 'GET', mode: 'no-cors' })
+        .then(() => {
+            console.log("Upload Success");
+            showFinalResult(results.total, studentName);
+        })
+        .catch(err => {
+            console.error("Upload Failed:", err);
+            showFinalResult(results.total, studentName, false);
+        });
 }
 
 function showFinalResult(score, name, success = true) {
