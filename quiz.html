@@ -9,6 +9,27 @@
     <meta http-equiv="Expires" content="0">
     <title>综合挑战 (笔试+口试) - 三年级下册</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* 针对综合版的微调 */
+        .semester-tag {
+            background: #E91E63;
+        }
+
+        .header-bar {
+            background: #2196F3;
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .big-score {
+            font-family: 'Arial Rounded MT Bold', sans-serif;
+        }
+    </style>
 </head>
 
 <body>
@@ -40,27 +61,8 @@
                         <div class="lesson-btn" onclick="selectLesson(this, 'u2_l4.js')">L4: Unit Review</div>
                     </div>
                 </div>
-                <!-- Unit 3 -->
-                <div class="unit-card">
-                    <span class="unit-title">Unit 3: Time</span>
-                    <div class="lesson-btn-group">
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u3_l1.js')">L1: What time is it?</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u3_l2.js')">L2: It's time for class</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u3_l3.js')">L3: My Day</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u3_l4.js')">L4: Unit Review</div>
-                    </div>
-                </div>
-                <!-- Unit 4 -->
-                <div class="unit-card">
-                    <span class="unit-title">Unit 4: Healthy Eating</span>
-                    <div class="lesson-btn-group">
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u4_l1.js')">L1: I like milk</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u4_l2.js')">L2: Do you like rice?</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u4_l3.js')">L3: Delicious Food</div>
-                        <div class="lesson-btn" onclick="selectLesson(this, 'u4_l4.js')">L4: Unit Review</div>
-                    </div>
-                </div>
             </div>
+            <div style="text-align:center; color:#999; font-size:12px; margin-top:10px;">更多单元逐步开放中...</div>
         </div>
 
         <!-- 2. 读取中 -->
@@ -81,8 +83,7 @@
 
         <!-- 4. 答题主界面 -->
         <div id="quizInterface" class="hidden">
-            <div class="header-bar"
-                style="background:#2196F3; color:white; padding:10px 15px; border-radius:12px; margin-bottom:10px; display:flex; justify-content:space-between;">
+            <div class="header-bar">
                 <span id="studentNameDisplay" style="font-weight:bold;">Student</span>
                 <span id="timerDisplay" class="timer">00:00</span>
             </div>
@@ -99,7 +100,7 @@
             <div id="navButtons" class="nav-bar">
                 <button id="btnPrev" onclick="prevQ()">⬅️ 上一题</button>
                 <button id="btnNext" onclick="nextQ()">下一题 ➡️</button>
-                <button id="btnSubmit" onclick="submit()" class="btn-success hidden">✅ 完成挑战并交卷</button>
+                <button id="btnSubmit" onclick="submit()" class="btn-success hidden">✅ 完成并交卷</button>
             </div>
         </div>
 
@@ -128,6 +129,7 @@
             "26. 张梓纯", "27. 张泽鑫"
         ];
 
+        // 初始化学生名单格子
         const grid = document.getElementById('studentGrid');
         STUDENTS.forEach(name => {
             const btn = document.createElement('div');

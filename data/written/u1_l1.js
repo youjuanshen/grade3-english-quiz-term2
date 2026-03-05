@@ -148,6 +148,42 @@ window.LOAD_QUIZ({
             text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder the sentence)</span>',
             words: ['I', 'like', 'birds', '.'],
             correct: 'I like birds.'
+        },
+
+        // ===========================
+        // Part D: Speaking (口语 5题)
+        // ===========================
+        {
+            qNum: 16,
+            part: 'D',
+            text: '请读出单词：Cat, Dog, Bird.',
+            score: 5
+        },
+        {
+            qNum: 17,
+            part: 'D',
+            text: '看图说话：I like rabbits.',
+            imageUri: 'img/rabbit.png',
+            score: 5
+        },
+        {
+            qNum: 18,
+            part: 'D',
+            text: '回答问题：What animal do you like?',
+            score: 5
+        },
+        {
+            qNum: 19,
+            part: 'D',
+            text: '读出句子：Look at the panda. It is cute.',
+            imageUri: 'img/panda.png',
+            score: 5
+        },
+        {
+            qNum: 20,
+            part: 'D',
+            text: '自我表达：说出一句你喜欢的动物。',
+            score: 5
         }
     ]
 });
