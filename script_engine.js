@@ -1,5 +1,5 @@
 // ==================================================================
-// 🐾 script_engine.js V2.2 - 三年级下册专用 (25/25/25/25 科学权重版)
+// 🐾 script_engine.js V2.3 - 三年级下册专用 (增强稳定性版)
 // ==================================================================
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyR1D1HVmrmW7PHuIP-iYgSTcNFVHWBfoXpYIotWWQkXrIYVK8tc6YhzQEoGVDnxpI/exec";
 
@@ -30,15 +30,15 @@ function getSessionId() {
 
 function initEngine(mode) {
     currentMode = mode;
-    console.log("Engine Loaded: Grade 3 S2 [" + mode + "] Mode V2.2");
+    console.log("🚀 Engine V2.3 Initialized in [" + mode + "] mode");
 
-    // 自动加载逻辑
     const urlParams = new URLSearchParams(window.location.search);
     const autoLesson = urlParams.get('lesson');
     if (autoLesson) { loadPaper(autoLesson); }
 }
 
 window.LOAD_QUIZ = function (data) {
+    console.log("📦 Quiz Data Loaded:", data.title);
     currentData = data;
     timeLeft = data.timeLimit || 600;
     const titleEl = document.getElementById('examTitle');
@@ -52,7 +52,7 @@ function loadPaper(path) {
     toggleDisplay('loadingBox', true);
     const script = document.createElement('script');
     script.src = "data/written/" + path + "?t=" + Date.now();
-    script.onerror = () => { alert("❌ 文件未找到: " + path); location.reload(); };
+    script.onerror = () => { alert("❌ 文件加载失败: " + path); location.reload(); };
     document.body.appendChild(script);
 }
 
@@ -70,11 +70,18 @@ function startExam() {
     if (currentMode === 'written') startTimer();
 }
 
-// ================= ⭐ 核心渲染逻辑 ⭐ =================
+// --- 增强型规范化比较 ---
+function cleanString(str) {
+    if (!str) return "";
+    return str.toString()
+        .toLowerCase()
+        .replace(/[.,?!:：，。！？]/g, '') // 彻底移除标点
+        .replace(/\s+/g, '')             // 移除所有空格
+        .trim();
+}
+
 function renderQuestion() {
     const allQs = currentData.questions;
-
-    // 过滤逻辑：笔试模式只看 A/B/C，口语模式只看 D
     const relevantQs = allQs.filter(q => {
         if (currentMode === 'written') return q.part === 'A' || q.part === 'B' || q.part === 'C';
         return q.part === 'D';
@@ -85,11 +92,9 @@ function renderQuestion() {
         return;
     }
 
-    // 确保 index 不越界
     if (currentQIndex >= relevantQs.length) currentQIndex = relevantQs.length - 1;
     const q = relevantQs[currentQIndex];
 
-    // 更新进度条
     document.getElementById('progressText').innerText = `Part ${q.part} | 第 ${currentQIndex + 1} 题 / 共 ${relevantQs.length} 题`;
     document.getElementById('progressBar').style.width = `${((currentQIndex + 1) / relevantQs.length) * 100}%`;
 
@@ -126,7 +131,6 @@ function renderQuestion() {
     }
 
     if (q.part !== 'D') {
-        // 笔试题型
         if (q.type === 'select' || !q.type) {
             html += `<div class="options-list">`;
             q.options.forEach(opt => {
@@ -146,7 +150,6 @@ function renderQuestion() {
             html += `<input type="text" class="fill-input" value="${answers['Q' + q.qNum] || ''}" oninput="updateFill('${q.qNum}')" placeholder="在此输入答案">`;
         }
     } else {
-        // 口语评分
         html += `<div class="score-row">`;
         for (let s = 5; s >= 1; s--) {
             const active = answers['Q' + q.qNum] === s ? 'active' : '';
@@ -157,7 +160,6 @@ function renderQuestion() {
     document.getElementById('qContent').innerHTML = html;
 }
 
-// 🔥 核心评分算法 🔥
 function calculateSubmissionScore() {
     let parts = { 'A': { c: 0, t: 0 }, 'B': { c: 0, t: 0 }, 'C': { c: 0, t: 0 }, 'D': { s: 0, m: 0, t: 0 } };
 
@@ -168,15 +170,21 @@ function calculateSubmissionScore() {
             parts['D'].m += 5;
         } else {
             parts[q.part].t++;
-            let user = (answers['Q' + q.qNum] || "").toString().toLowerCase().trim().replace(/[.,?!]/g, '');
-            let correct = (q.correct || "MISSING").toString().toLowerCase().trim().replace(/[.,?!]/g, '');
-            if (user === correct) parts[q.part].c++;
+            let user = cleanString(answers['Q' + q.qNum] || "");
+            let correct = cleanString(q.correct || "");
+            if (user === correct) {
+                parts[q.part].c++;
+            } else {
+                console.warn(`Mismatch Q${q.qNum}: [${user}] vs [${correct}]`);
+            }
         }
     });
 
     const getPScore = (p) => {
         if (p === 'D') return parts['D'].m > 0 ? (parts['D'].s / parts['D'].m) * 25 : 0;
-        return parts[p].t > 0 ? (parts[p].c / parts[p].t) * 25 : 0;
+        // 如果题目总数为0，该部分得满分
+        if (parts[p].t === 0) return 25;
+        return (parts[p].c / parts[p].t) * 25;
     };
 
     let scA = Math.round(getPScore('A'));
@@ -194,8 +202,6 @@ function submit() {
 
     const results = calculateSubmissionScore();
     const studentName = document.getElementById('studentNameDisplay').innerText;
-
-    // 如果是口试模式，上传类型设为 [加考-口语]
     const typeLabel = currentMode === 'written' ? "[笔试]" : "[口试]";
 
     const payload = {
@@ -210,62 +216,86 @@ function submit() {
         speakingScore: results.D
     };
 
-    console.log("Submitting payload:", payload);
+    console.log("📤 Submitting Score:", payload);
 
     const query = Object.keys(payload).map(k => k + '=' + encodeURIComponent(payload[k])).join('&');
     fetch(GOOGLE_SCRIPT_URL + '?' + query, { method: 'GET', mode: 'no-cors' })
-        .then(() => showFinalUI(results, studentName))
-        .catch(err => { console.error(err); showFinalUI(results, studentName, false); });
+        .then(() => {
+            console.log("✅ Server Accepted Request");
+            showFinalUI(results, studentName);
+        })
+        .catch(err => {
+            console.error("❌ Submission Failed:", err);
+            showFinalUI(results, studentName, false);
+        });
 }
 
 function showFinalUI(results, name, success = true) {
     toggleDisplay('submittingBox', false);
     const box = document.getElementById('resultBox');
 
-    let scoreDisplay = currentMode === 'written' ? (results.A + results.B + results.C) : results.D;
-    let maxDisplay = currentMode === 'written' ? 75 : 25;
+    // 显示分数的差异
+    let scoreVal = currentMode === 'written' ? (results.A + results.B + results.C) : results.D;
+    let maxVal = currentMode === 'written' ? 75 : 25;
 
-    let handoverNote = currentMode === 'written' ?
-        `<div style="background:#fff3e0; padding:15px; border-radius:15px; border:2px dashed #ff9800; margin:20px 0;">
-            <p style="color:#e65100; font-weight:bold; font-size:18px;">🎉 笔试挑战成功！</p>
-            <p style="color:#666;">现在，请带着设备去找 <b>沈老师 (Merry)</b><br>进行最后的口语面试哦！</p>
+    let handover = currentMode === 'written' ?
+        `<div style="margin:20px 0; background:#fff3e0; padding:15px; border-radius:12px; border:2px dashed #ff9800;">
+            <p style="color:#e65100; font-weight:bold;">🎉 笔试已完成！</p>
+            <p>现在请找 <b>沈老师</b> 进行口语面试。</p>
         </div>` :
-        `<div style="background:#e8f5e9; padding:15px; border-radius:15px; border:2px dashed #4caf50; margin:20px 0;">
-            <p style="color:#2e7d32; font-weight:bold; font-size:18px;">🌟 口语面试结束！</p>
-            <p style="color:#666;">你表现得非常棒，继续加油！</p>
+        `<div style="margin:20px 0; background:#e8f5e9; padding:15px; border-radius:12px; border:2px dashed #4caf50;">
+            <p style="color:#2e7d32; font-weight:bold;">🌟 面试结束！</p>
+            <p>你得表现棒极了！</p>
         </div>`;
 
     box.innerHTML = `
-        <div class="score-summary">
-            <h1 style="color:#2196F3;">${name} 同学</h1>
-            <div style="font-size:16px; color:#666;">本次${currentMode === 'written' ? '笔试' : '口试'}得分</div>
-            <div style="font-size:60px; color:#f44336; font-weight:bold; margin:10px 0;">
-                ${scoreDisplay}<span style="font-size:20px; color:#999;"> / ${maxDisplay}</span>
-            </div>
-            ${handoverNote}
-            <button class="btn-primary" onclick="location.reload()" style="width:100%;">返回首页 🏠</button>
-        </div>
+        <h1 style="color:#2196F3;">${name}</h1>
+        <div style="font-size:14px; color:#666;">本次${currentMode === 'written' ? '笔试' : '口试'}得分</div>
+        <div style="font-size:62px; color:#f44336; font-weight:bold; margin:15px 0;">${scoreVal}<span style="font-size:18px; color:#999;">/${maxVal}</span></div>
+        ${handover}
+        <button class="btn-primary" onclick="location.reload()" style="width:100%;">回到首页</button>
     `;
     toggleDisplay('resultBox', true);
 }
 
-// 辅助函数
 function choose(qid, v) { answers['Q' + qid] = v; renderQuestion(); }
 function rate(qid, s) { answers['Q' + qid] = s; renderQuestion(); }
 function prevQ() { if (currentQIndex > 0) { currentQIndex--; renderQuestion(); } }
-function nextQ() { if (currentQIndex < 50) { currentQIndex++; renderQuestion(); } } // 防超限
-function updateFill(qid) { answers['Q' + qid] = event.target.value.trim(); renderQuestion(); }
+function nextQ() { if (currentQIndex < relevantQs_length()) { currentQIndex++; renderQuestion(); } }
+
+function relevantQs_length() {
+    return currentData.questions.filter(q => {
+        if (currentMode === 'written') return q.part === 'A' || q.part === 'B' || q.part === 'C';
+        return q.part === 'D';
+    }).length;
+}
+
+function updateFill(qid) {
+    answers['Q' + qid] = event.target.value;
+    const relevantQs = currentData.questions.filter(q => {
+        if (currentMode === 'written') return q.part === 'A' || q.part === 'B' || q.part === 'C';
+        return q.part === 'D';
+    });
+    // 更新按钮状态
+    const btnNext = document.getElementById('btnNext');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const hasAnswered = event.target.value.trim() !== "";
+    if (currentQIndex === relevantQs.length - 1) btnSubmit.disabled = !hasAnswered; else btnNext.disabled = !hasAnswered;
+}
+
 function moveWord(el, tid, sid, qid) {
     const t = document.getElementById(tid);
-    if (el.parentElement.id === sid) t.appendChild(el); else document.getElementById(sid).appendChild(el);
+    if (el.parentElement.id === sid) { el.classList.add('active'); t.appendChild(el); }
+    else { el.classList.remove('active'); document.getElementById(sid).appendChild(el); }
     answers['Q' + qid] = Array.from(t.children).map(s => s.innerText).join(' ');
     renderQuestion();
 }
+
 function toggleDisplay(id, show) {
     const el = document.getElementById(id); if (!el) return;
     el.style.display = show ? 'block' : 'none';
-    if (show) el.classList.remove('hidden'); else el.classList.add('hidden');
 }
+
 function startTimer() {
     timerInterval = setInterval(() => {
         if (timeLeft <= 0) { clearInterval(timerInterval); submit(); return; }
@@ -275,6 +305,7 @@ function startTimer() {
         if (document.getElementById('timerDisplay')) document.getElementById('timerDisplay').innerText = `${m}:${s}`;
     }, 1000);
 }
+
 function speak(text) {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
