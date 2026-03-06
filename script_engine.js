@@ -160,47 +160,72 @@ function renderQuestion() {
     document.getElementById('qContent').innerHTML = html;
 }
 
-function calculateSubmissionScore() {
-    let parts = { 'A': { c: 0, t: 0 }, 'B': { c: 0, t: 0 }, 'C': { c: 0, t: 0 }, 'D': { s: 0, m: 0, t: 0 } };
-
-    currentData.questions.forEach(q => {
-        if (q.part === 'D') {
-            parts['D'].t++;
-            parts['D'].s += parseInt(answers['Q' + q.qNum]) || 0;
-            parts['D'].m += 5;
-        } else {
-            parts[q.part].t++;
-            let user = cleanString(answers['Q' + q.qNum] || "");
-            let correct = cleanString(q.correct || "");
-            if (user === correct) {
-                parts[q.part].c++;
-            } else {
-                console.warn(`Mismatch Q${q.qNum}: [${user}] vs [${correct}]`);
-            }
-        }
-    });
-
-    const getPScore = (p) => {
-        if (p === 'D') return parts['D'].m > 0 ? (parts['D'].s / parts['D'].m) * 25 : 0;
-        // 如果题目总数为0，该部分得满分
-        if (parts[p].t === 0) return 25;
-        return (parts[p].c / parts[p].t) * 25;
-    };
-
-    let scA = Math.round(getPScore('A'));
-    let scB = Math.round(getPScore('B'));
-    let scC = Math.round(getPScore('C'));
-    let scD = Math.round(getPScore('D'));
-
-    return { total: scA + scB + scC + scD, A: scA, B: scB, C: scC, D: scD };
-}
-
+// ============================================================
+// 🔥 评分 + 提交 (完全兼容上学期后台格式) 🔥
+// ============================================================
 function submit() {
     if (timerInterval) clearInterval(timerInterval);
     toggleDisplay('quizInterface', false);
+
+    // 显示上传中界面
+    const submittingBox = document.getElementById('submittingBox');
+    submittingBox.innerHTML = `
+        <div class="cute-loader">🚀</div>
+        <div>正在飞速上传成绩...</div>
+        <div style="font-size:12px; color:#999; margin-top:10px;">(请稍候，不要关闭窗口)</div>
+    `;
     toggleDisplay('submittingBox', true);
 
-    const results = calculateSubmissionScore();
+    let totalScore = 0;
+    let scoreL = 0, scoreR = 0, scoreW = 0;
+    let maxScore = 0;
+
+    if (currentMode === 'speaking') {
+        // 口语模式：只看 Part D
+        currentData.questions.forEach(q => {
+            if (q.part !== 'D') return;
+            const qMax = q.score || 5;
+            maxScore += qMax;
+            totalScore += parseInt(answers['Q' + q.qNum]) || 0;
+        });
+    } else {
+        // 笔试模式：只看 Part A/B/C
+        currentData.questions.forEach(q => {
+            if (q.part === 'D') return; // 跳过口语题
+            const qMax = q.score || 1;
+            maxScore += qMax;
+
+            const userAns = answers['Q' + q.qNum];
+            let isCorrect = false;
+
+            if (q.type === 'drag-sort') {
+                if (userAns && cleanString(userAns) === cleanString(q.correct)) isCorrect = true;
+            } else {
+                if (userAns && cleanString(userAns) === cleanString(q.correct)) isCorrect = true;
+            }
+
+            if (isCorrect) {
+                totalScore += qMax;
+                if (q.part === 'A') scoreL += qMax;
+                else if (q.part === 'B') scoreR += qMax;
+                else if (q.part === 'C') scoreW += qMax;
+            } else {
+                console.warn(`❌ Q${q.qNum}: [${userAns}] vs [${q.correct}]`);
+            }
+        });
+    }
+
+    let percentNum = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+    console.log(`📊 得分: ${totalScore}/${maxScore} (${percentNum}%) | L:${scoreL} R:${scoreR} W:${scoreW}`);
+
+    let feedback = "";
+    if (percentNum >= 95) feedback = "🌟 哇！你是超级英语小达人！太棒了！";
+    else if (percentNum >= 85) feedback = "👏 真不错！成绩非常优秀，继续保持！";
+    else if (percentNum >= 70) feedback = "👍 做得好！大部分都掌握啦，继续加油！";
+    else if (percentNum >= 60) feedback = "💪 及格啦！再多一点点细心就更完美了！";
+    else feedback = "🌱 别灰心！这是成长的机会，多练习一定会进步的！";
+
+    // 构建 payload (完全兼容上学期后台)
     const studentName = document.getElementById('studentNameDisplay').innerText;
     const typeLabel = currentMode === 'written' ? "[笔试]" : "[口试]";
 
@@ -208,55 +233,71 @@ function submit() {
         sessionId: getSessionId(),
         studentName: studentName,
         lessonTitle: typeLabel + " " + currentData.title,
-        examType: "Grade3-S2-" + currentMode,
-        score: results.total,
-        listeningScore: results.A,
-        readingScore: results.B,
-        writingScore: results.C,
-        speakingScore: results.D
+        examType: currentMode,
+        score: totalScore,
+        listeningScore: currentMode === 'written' ? scoreL : "",
+        readingScore: currentMode === 'written' ? scoreR : "",
+        writingScore: currentMode === 'written' ? scoreW : ""
     };
 
-    console.log("📤 Submitting Score:", payload);
+    console.log("📤 Submitting:", payload);
 
+    const TIMEOUT_MS = 40000;
     const query = Object.keys(payload).map(k => k + '=' + encodeURIComponent(payload[k])).join('&');
-    fetch(GOOGLE_SCRIPT_URL + '?' + query, { method: 'GET', mode: 'no-cors' })
-        .then(() => {
-            console.log("✅ Server Accepted Request");
-            showFinalUI(results, studentName);
+    const fullUrl = GOOGLE_SCRIPT_URL + '?' + query;
+
+    const submissionPromise = fetch(fullUrl, { method: 'GET', mode: 'no-cors' });
+    const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT_ERROR')), TIMEOUT_MS)
+    );
+
+    Promise.race([submissionPromise, timeoutPromise])
+        .then(response => {
+            if (response.status !== 200 && response.status !== 0) {
+                throw new Error('SERVER_BUSY_OR_ERROR');
+            }
+            showFinalUI_v2(totalScore, maxScore, feedback, studentName, true);
         })
-        .catch(err => {
-            console.error("❌ Submission Failed:", err);
-            showFinalUI(results, studentName, false);
+        .catch(error => {
+            let message = "❌ 成绩提交失败，请检查网络。";
+            if (error.message === 'TIMEOUT_ERROR') {
+                message = "❌ 提交超时 (40秒)。请排队稍后重试。";
+            } else if (error.message === 'SERVER_BUSY_OR_ERROR') {
+                message = "❌ 服务器繁忙，请稍后重试。";
+            }
+            console.error("提交出错:", error);
+            showFinalUI_v2(totalScore, maxScore, feedback, studentName, false, message);
         });
 }
 
-function showFinalUI(results, name, success = true) {
+function showFinalUI_v2(totalScore, maxScore, feedback, name, success, errorMessage = "") {
     toggleDisplay('submittingBox', false);
     const box = document.getElementById('resultBox');
 
-    // 显示分数的差异
-    let scoreVal = currentMode === 'written' ? (results.A + results.B + results.C) : results.D;
-    let maxVal = currentMode === 'written' ? 75 : 25;
+    let statusHTML = success ?
+        `<p style="color:green; font-weight:bold;">✅ 成绩已成功上传！</p>` :
+        `<p style="color:red; font-weight:bold;">${errorMessage}</p>`;
 
     let handover = currentMode === 'written' ?
-        `<div style="margin:20px 0; background:#fff3e0; padding:15px; border-radius:12px; border:2px dashed #ff9800;">
-            <p style="color:#e65100; font-weight:bold;">🎉 笔试已完成！</p>
-            <p>现在请找 <b>沈老师</b> 进行口语面试。</p>
-        </div>` :
-        `<div style="margin:20px 0; background:#e8f5e9; padding:15px; border-radius:12px; border:2px dashed #4caf50;">
-            <p style="color:#2e7d32; font-weight:bold;">🌟 面试结束！</p>
-            <p>你得表现棒极了！</p>
-        </div>`;
+        `<div style="margin:15px 0; background:#fff3e0; padding:15px; border-radius:12px; border:2px dashed #ff9800;">
+            <p style="color:#e65100; font-weight:bold;">🎉 笔试完成！请找沈老师进行口语面试。</p>
+        </div>` : '';
 
     box.innerHTML = `
-        <h1 style="color:#2196F3;">${name}</h1>
-        <div style="font-size:14px; color:#666;">本次${currentMode === 'written' ? '笔试' : '口试'}得分</div>
-        <div style="font-size:62px; color:#f44336; font-weight:bold; margin:15px 0;">${scoreVal}<span style="font-size:18px; color:#999;">/${maxVal}</span></div>
+        <h1>🎉 挑战结束！</h1>
+        <div style="font-size:14px; color:#666;">你的${currentMode === 'written' ? '笔试' : '口语'}得分</div>
+        <div style="font-size:60px; color:#f44336; font-weight:bold; margin:10px 0;">
+            ${totalScore}<span style="font-size:20px; color:#999;"> / ${maxScore} 分</span>
+        </div>
+        <div style="font-size:16px; margin:10px;">${feedback}</div>
+        ${statusHTML}
         ${handover}
-        <button class="btn-primary" onclick="location.reload()" style="width:100%;">回到首页</button>
+        <button class="btn-primary" onclick="location.reload()" style="width:100%; font-size:18px;">返回菜单 🏠</button>
     `;
     toggleDisplay('resultBox', true);
 }
+
+
 
 function choose(qid, v) { answers['Q' + qid] = v; renderQuestion(); }
 function rate(qid, s) { answers['Q' + qid] = s; renderQuestion(); }
