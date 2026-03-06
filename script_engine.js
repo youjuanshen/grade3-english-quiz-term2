@@ -261,7 +261,14 @@ function showFinalUI(results, name, success = true) {
 function choose(qid, v) { answers['Q' + qid] = v; renderQuestion(); }
 function rate(qid, s) { answers['Q' + qid] = s; renderQuestion(); }
 function prevQ() { if (currentQIndex > 0) { currentQIndex--; renderQuestion(); } }
-function nextQ() { if (currentQIndex < relevantQs_length()) { currentQIndex++; renderQuestion(); } }
+function nextQ() {
+    const len = relevantQs_length();
+    if (currentQIndex < len - 1) {
+        currentQIndex++;
+        renderQuestion();
+    }
+}
+
 
 function relevantQs_length() {
     return currentData.questions.filter(q => {
@@ -294,7 +301,9 @@ function moveWord(el, tid, sid, qid) {
 function toggleDisplay(id, show) {
     const el = document.getElementById(id); if (!el) return;
     el.style.display = show ? 'block' : 'none';
+    if (show) el.classList.remove('hidden'); else el.classList.add('hidden');
 }
+
 
 function startTimer() {
     timerInterval = setInterval(() => {
