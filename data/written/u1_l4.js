@@ -1,119 +1,129 @@
 /**
- * ✍️ Unit 1 Lesson 4: Unit 1 Review
+ * ✍️ Unit 1 Lesson 4: Look! It's a cat.
  * 闽教版三年级下册 2025春季版
+ * Key words: draw, nose
+ * Key patterns: These are two eyes. This is a face.
+ * 综合复习 Unit 1 全部内容
  */
 window.LOAD_QUIZ({
-    title: "Unit 1 Lesson 4: Unit Review",
-    timeLimit: 600,
+    title: "Unit 1 Lesson 4: Look! It's a cat.",
+    timeLimit: 540,
 
     questions: [
-        // Part A: Listening
+        // ===========================
+        // Part A: Listening (听力 5题)
+        // ===========================
         {
             qNum: 1, part: 'A', type: 'select',
-            text: '听录音，选出你听到的动物。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'I have a bird. It is blue.',
-            options: ['A. cat', 'B. bird', 'C. dog', 'D. rabbit'],
-            correct: 'B. bird',
-            imageUri: 'img/bird.png'
+            text: '听录音，选出正确的中文意思。<br><span style="font-size:14px;color:#666">(Listen and choose the meaning)</span>',
+            audioText: 'Let\'s draw together.',
+            options: ['A. 我们一起画画吧。', 'B. 我们一起跳吧。', 'C. 我们一起跑吧。', 'D. 这是一只猫。'],
+            correct: 'A. 我们一起画画吧。'
         },
         {
             qNum: 2, part: 'A', type: 'select',
-            text: '听录音，选出正确的翻译。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'Do you like dogs?',
-            options: ['A. 你喜欢猫吗？', 'B. 你喜欢狗吗？', 'C. 这是狗。', 'D. 我喜欢狗。'],
-            correct: 'B. 你喜欢狗吗？'
+            text: '听录音，选出你听到的身体部位。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'This is a face. These are two eyes.',
+            options: ['A. ears', 'B. eyes', 'C. legs', 'D. mouth'],
+            correct: 'B. eyes'
         },
         {
             qNum: 3, part: 'A', type: 'select',
-            text: '听录音选词填空：I like ______.<br><span style="font-size:14px;color:#666">(Listen and complete)</span>',
-            audioText: 'I like ducks.',
-            options: ['A. cats', 'B. dogs', 'C. ducks', 'D. fish'],
-            correct: 'C. ducks'
+            text: '听录音，选出正确的答案。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'Look, a nose and a mouth.',
+            options: ['A. 一个鼻子和一个嘴巴', 'B. 两个眼睛和两个耳朵', 'C. 一个脸和两个腿', 'D. 一个鼻子和两个眼睛'],
+            correct: 'A. 一个鼻子和一个嘴巴'
         },
         {
             qNum: 4, part: 'A', type: 'select',
-            text: '听录音，选出你听到的句子。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'Look at the panda.',
-            options: ['A. Look at the cat.', 'B. Look at the panda.', 'C. I like pandas.', 'D. It is big.'],
-            correct: 'B. Look at the panda.'
+            text: '听录音，选出正确的动物。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'Look! It\'s a cat. These are two ears.',
+            options: ['A. dog', 'B. cat', 'C. panda', 'D. bear'],
+            correct: 'B. cat'
         },
         {
             qNum: 5, part: 'A', type: 'select',
-            text: '听对话，判断对错。录音说 "Yes, I do." 问题是 "Do you like cats?"<br><span style="font-size:14px;color:#666">(True or False?)</span>',
-            audioText: 'Do you like cats? Yes, I do.',
-            options: ['A. ✓ 对的（他喜欢猫）', 'B. ✗ 错的（他不喜欢猫）'],
-            correct: 'A. ✓ 对的（他喜欢猫）'
+            text: '听录音，判断对不对。录音说 "Is it a panda?" 回答说 "No, it isn\'t."<br><span style="font-size:14px;color:#666">(True or False? 它是熊猫吗？)</span>',
+            audioText: 'Is it a panda? No, it isn\'t.',
+            options: ['A. ✓ 对的（是熊猫）', 'B. ✗ 错的（不是熊猫）'],
+            correct: 'B. ✗ 错的（不是熊猫）'
         },
 
-        // Part B: Reading
+        // ===========================
+        // Part B: Reading (阅读 5题)
+        // ===========================
         {
             qNum: 6, part: 'B', type: 'select',
-            text: '回答问题：Do you like rabbits?（两个都可以）',
-            options: ['A. Yes, I do.', 'B. No, I don\'t.', 'C. I like cats.', 'D. A or B'],
-            correct: 'D. A or B'
+            text: '"nose" 的中文是什么？',
+            options: ['A. 眼睛', 'B. 耳朵', 'C. 嘴巴', 'D. 鼻子'],
+            correct: 'D. 鼻子'
         },
         {
             qNum: 7, part: 'B', type: 'select',
-            text: '"Look at the panda." 的翻译是：',
-            options: ['A. 看那只熊猫。', 'B. 我喜欢熊猫。', 'C. 熊猫很大。', 'D. 这是一只熊猫。'],
-            correct: 'A. 看那只熊猫。'
+            text: '"draw" 的中文是什么？',
+            options: ['A. 跳', 'B. 跑', 'C. 画', 'D. 飞'],
+            correct: 'C. 画'
         },
         {
             qNum: 8, part: 'B', type: 'select',
-            text: '找出不同类的一项。',
-            options: ['A. cat', 'B. dog', 'C. bird', 'D. apple'],
-            correct: 'D. apple'
+            text: '"These are two eyes." 的翻译是：',
+            options: ['A. 这是一个鼻子。', 'B. 这些是两只眼睛。', 'C. 那些是两只耳朵。', 'D. 这是一张脸。'],
+            correct: 'B. 这些是两只眼睛。'
         },
         {
             qNum: 9, part: 'B', type: 'select',
-            text: '"duck" 的中文是什么？',
-            options: ['A. 鸡', 'B. 鸭子', 'C. 鹅', 'D. 鱼'],
-            correct: 'B. 鸭子'
+            text: '找出不同类的一项。',
+            options: ['A. eye', 'B. ear', 'C. nose', 'D. horse'],
+            correct: 'D. horse'
         },
         {
             qNum: 10, part: 'B', type: 'select',
-            text: '"Do you like birds?" 回答 "不喜欢" 应该说：',
-            options: ['A. Yes, I do.', 'B. No, I don\'t.', 'C. I like birds.', 'D. Thank you.'],
-            correct: 'B. No, I don\'t.'
+            text: '"This is a face." 的中文意思是：',
+            options: ['A. 这是一张脸。', 'B. 这是一只猫。', 'C. 那是一只熊。', 'D. 这些是眼睛。'],
+            correct: 'A. 这是一张脸。'
         },
 
-        // Part C: Writing
+        // ===========================
+        // Part C: Writing (写作 5题)
+        // ===========================
         {
             qNum: 11, part: 'C', type: 'select',
-            text: '补全单词：b _ r d',
+            text: '补全单词：n _ s e (鼻子)',
             options: ['A. a', 'B. e', 'C. i', 'D. o'],
-            correct: 'C. i'
+            correct: 'D. o'
         },
         {
             qNum: 12, part: 'C', type: 'drag-sort',
-            text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder)</span>',
-            words: ['Do', 'you', 'like', 'dogs', '?'],
-            correct: 'Do you like dogs?'
+            text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder the sentence)</span>',
+            words: ['These', 'are', 'two', 'eyes', '.'],
+            correct: 'These are two eyes.'
         },
         {
             qNum: 13, part: 'C', type: 'select',
-            text: '补全单词：r _ b b i t',
+            text: '补全单词：dr _ w (画)',
             options: ['A. a', 'B. e', 'C. i', 'D. o'],
             correct: 'A. a'
         },
         {
             qNum: 14, part: 'C', type: 'drag-sort',
-            text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder)</span>',
-            words: ['Look', 'at', 'the', 'panda', '.'],
-            correct: 'Look at the panda.'
+            text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder the sentence)</span>',
+            words: ['This', 'is', 'a', 'face', '.'],
+            correct: 'This is a face.'
         },
         {
             qNum: 15, part: 'C', type: 'select',
-            text: '选出正确的拼写（鸭子）。',
-            options: ['A. dack', 'B. duck', 'C. duk', 'D. duak'],
-            correct: 'B. duck'
+            text: '选出正确的拼写（嘴巴）。',
+            options: ['A. mouth', 'B. mauth', 'C. mowth', 'D. moath'],
+            correct: 'A. mouth'
         },
 
-        // Part D: Speaking
-        { qNum: 16, part: 'D', text: '读出单词：Cat, Dog, Bird, Rabbit, Panda, Duck.', score: 5 },
-        { qNum: 17, part: 'D', text: '看图说话：I like ducks.', imageUri: 'img/duck.png', score: 5 },
-        { qNum: 18, part: 'D', text: '回答：Do you like cats?', score: 5 },
-        { qNum: 19, part: 'D', text: '读出句子：Look at the bird. It can fly.', score: 5 },
-        { qNum: 20, part: 'D', text: '说出你最喜欢的动物并造一个句子。', score: 5 }
+        // ===========================
+        // Part D: Speaking (口语 5题)
+        // ===========================
+        { qNum: 16, part: 'D', text: '请读出单词：Nose, Draw, Face, Eye, Ear, Mouth.', score: 5 },
+        { qNum: 17, part: 'D', text: '读出句子：This is a face. These are two eyes.', score: 5 },
+        { qNum: 18, part: 'D', text: '读出句子：Look! It\'s a cat. These are two ears.', score: 5 },
+        { qNum: 19, part: 'D', text: '说出动物的身体部位：eye, ear, nose, mouth, leg.', score: 5 },
+        { qNum: 20, part: 'D', text: '看图描述一个动物（用 This is... These are... 句型）。', score: 5 }
     ]
 });

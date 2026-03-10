@@ -285,6 +285,7 @@ function showFinalUI_v2(totalScore, maxScore, feedback, name, success, errorMess
 
     box.innerHTML = `
         <h1>🎉 挑战结束！</h1>
+        <div style="font-size:18px; color:#2196F3; font-weight:bold; margin:5px 0;">${name} 同学</div>
         <div style="font-size:14px; color:#666;">你的${currentMode === 'written' ? '笔试' : '口语'}得分</div>
         <div style="font-size:60px; color:#f44336; font-weight:bold; margin:10px 0;">
             ${totalScore}<span style="font-size:20px; color:#999;"> / ${maxScore} 分</span>

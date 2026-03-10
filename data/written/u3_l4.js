@@ -1,119 +1,120 @@
 /**
- * ✍️ Unit 3 Lesson 4: Unit 3 Review
+ * ✍️ Unit 3 Lesson 4: It's time to do my homework.
  * 闽教版三年级下册 2025春季版
- * 复习：时间 + 日常活动
+ * Key words: play, picture
+ * Key patterns: It's time to do my homework. It's time to draw a picture.
  */
 window.LOAD_QUIZ({
-    title: "Unit 3 Lesson 4: Unit Review",
-    timeLimit: 600,
+    title: "Unit 3 Lesson 4: It's time to do my homework.",
+    timeLimit: 540,
 
     questions: [
         // Part A: Listening
         {
             qNum: 1, part: 'A', type: 'select',
-            text: '听录音，选出对应的活动。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'It is twelve o\'clock. Time for lunch.',
-            options: ['A. breakfast', 'B. lunch', 'C. dinner', 'D. bed'],
-            correct: 'B. lunch'
+            text: '听录音，选出正确的中文意思。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'It\'s time to do my homework.',
+            options: ['A. 该做作业了。', 'B. 该画画了。', 'C. 该玩了。', 'D. 该睡觉了。'],
+            correct: 'A. 该做作业了。'
         },
         {
             qNum: 2, part: 'A', type: 'select',
-            text: '听录音，选出正确的时间。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'It is eight o\'clock. Time for school.',
-            options: ['A. 7:00', 'B. 8:00', 'C. 9:00', 'D. 10:00'],
-            correct: 'B. 8:00'
+            text: '听录音，选出正确的活动。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'It\'s 7:30 p.m. It\'s time to draw a picture.',
+            options: ['A. 做作业', 'B. 画画', 'C. 玩耍', 'D. 睡觉'],
+            correct: 'B. 画画'
         },
         {
             qNum: 3, part: 'A', type: 'select',
-            text: '听录音选词填空：It is ten o\'clock. Time for ______.<br><span style="font-size:14px;color:#666">(Listen and complete)</span>',
-            audioText: 'It is ten o\'clock. Time for bed.',
-            options: ['A. breakfast', 'B. lunch', 'C. school', 'D. bed'],
-            correct: 'D. bed'
+            text: '听录音，选出正确的时间。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'It\'s 9:00 p.m. It\'s time to go to bed.',
+            options: ['A. 7:00 p.m.', 'B. 8:00 p.m.', 'C. 9:00 p.m.', 'D. 10:00 p.m.'],
+            correct: 'C. 9:00 p.m.'
         },
         {
             qNum: 4, part: 'A', type: 'select',
-            text: '听录音，选出正确的句子。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'What time is it? It is six o\'clock.',
-            options: ['A. 几点了？六点了。', 'B. 几点了？七点了。', 'C. 你几岁了？六岁。', 'D. 他几点了？'],
-            correct: 'A. 几点了？六点了。'
+            text: '听录音选词填空：It\'s time to ______.<br><span style="font-size:14px;color:#666">(Listen and complete)</span>',
+            audioText: 'It\'s time to play.',
+            options: ['A. play', 'B. read', 'C. cook', 'D. draw'],
+            correct: 'A. play'
         },
         {
             qNum: 5, part: 'A', type: 'select',
-            text: '听对话，选出正确的回答。问："What time is it?"<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'What time is it? It is three o\'clock.',
-            options: ['A. It is 2:00.', 'B. It is 3:00.', 'C. It is 4:00.', 'D. It is 5:00.'],
-            correct: 'B. It is 3:00.'
+            text: '听录音，判断对不对。录音说 "Oh, no! My homework!" 说明他做完作业了吗？<br><span style="font-size:14px;color:#666">(True or False?)</span>',
+            audioText: 'Oh, no! My homework!',
+            options: ['A. ✓ 对的（做完了）', 'B. ✗ 错的（没做完/忘了做）'],
+            correct: 'B. ✗ 错的（没做完/忘了做）'
         },
 
         // Part B: Reading
         {
             qNum: 6, part: 'B', type: 'select',
-            text: '几点钟？It\'s seven o\'clock.',
-            options: ['A. 6:00', 'B. 7:00', 'C. 8:00', 'D. 9:00'],
-            correct: 'B. 7:00'
+            text: '"play" 的中文是什么？',
+            options: ['A. 画', 'B. 读', 'C. 玩', 'D. 做'],
+            correct: 'C. 玩'
         },
         {
             qNum: 7, part: 'B', type: 'select',
-            text: '"school" 的中文是什么？',
-            options: ['A. 家', 'B. 学校', 'C. 公园', 'D. 商店'],
-            correct: 'B. 学校'
+            text: '"picture" 的中文是什么？',
+            options: ['A. 图画', 'B. 照片', 'C. 书', 'D. 电视'],
+            correct: 'A. 图画'
         },
         {
             qNum: 8, part: 'B', type: 'select',
-            text: '哪个不属于一日三餐？',
-            options: ['A. breakfast', 'B. lunch', 'C. dinner', 'D. clock'],
-            correct: 'D. clock'
+            text: '"It\'s time to go to bed." 的翻译是：',
+            options: ['A. 该上学了。', 'B. 该做作业了。', 'C. 该睡觉了。', 'D. 该吃饭了。'],
+            correct: 'C. 该睡觉了。'
         },
         {
             qNum: 9, part: 'B', type: 'select',
-            text: '"Time for school!" 的翻译是：',
-            options: ['A. 该上学了！', 'B. 该吃饭了！', 'C. 该睡觉了！', 'D. 该起床了！'],
-            correct: 'A. 该上学了！'
+            text: '找出不同类的一项。',
+            options: ['A. homework', 'B. picture', 'C. play', 'D. sweater'],
+            correct: 'D. sweater'
         },
         {
             qNum: 10, part: 'B', type: 'select',
-            text: '"What time is it?" 的意思是：',
-            options: ['A. 你叫什么名字？', 'B. 几点了？', 'C. 你好吗？', 'D. 在哪里？'],
-            correct: 'B. 几点了？'
+            text: '"homework" 的中文意思是：',
+            options: ['A. 家', 'B. 工作', 'C. 作业', 'D. 功课表'],
+            correct: 'C. 作业'
         },
 
         // Part C: Writing
         {
             qNum: 11, part: 'C', type: 'select',
-            text: '补全单词：sch _ _ l (学校)',
-            options: ['A. oo', 'B. ee', 'C. oa', 'D. ou'],
-            correct: 'A. oo'
+            text: '补全单词：pl _ y (玩)',
+            options: ['A. a', 'B. e', 'C. i', 'D. o'],
+            correct: 'A. a'
         },
         {
             qNum: 12, part: 'C', type: 'drag-sort',
             text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder)</span>',
-            words: ['What', 'time', 'is', 'it', '?'],
-            correct: 'What time is it?'
+            words: ['It\'s', 'time', 'to', 'do', 'my', 'homework', '.'],
+            correct: 'It\'s time to do my homework.'
         },
         {
             qNum: 13, part: 'C', type: 'select',
-            text: '补全单词：cl _ ck (钟)',
+            text: '补全单词：p _ c t u r e (图画)',
             options: ['A. a', 'B. e', 'C. i', 'D. o'],
-            correct: 'D. o'
+            correct: 'C. i'
         },
         {
             qNum: 14, part: 'C', type: 'drag-sort',
             text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder)</span>',
-            words: ['Time', 'for', 'school', '!'],
-            correct: 'Time for school !'
+            words: ['It\'s', 'time', 'to', 'play', '.'],
+            correct: 'It\'s time to play.'
         },
         {
             qNum: 15, part: 'C', type: 'select',
-            text: '选出正确的拼写"午餐"。',
-            options: ['A. lanch', 'B. lunch', 'C. luntch', 'D. lunck'],
-            correct: 'B. lunch'
+            text: '选出正确的拼写（作业）。',
+            options: ['A. homework', 'B. homwork', 'C. homewerk', 'D. homewrok'],
+            correct: 'A. homework'
         },
 
         // Part D: Speaking
-        { qNum: 16, part: 'D', text: '用英语说出1到12的数字。', score: 5 },
-        { qNum: 17, part: 'D', text: '读出句子：What time is it? It is ten o\'clock.', score: 5 },
-        { qNum: 18, part: 'D', text: '回答：What time do you get up?', score: 5 },
-        { qNum: 19, part: 'D', text: '读出句子：Time for breakfast! Get up!', score: 5 },
-        { qNum: 20, part: 'D', text: '用英文描述你的作息时间（至少2句话）。', score: 5 }
+        { qNum: 16, part: 'D', text: '读出单词：Play, Picture, Homework.', score: 5 },
+        { qNum: 17, part: 'D', text: '读出句子：It\'s time to do my homework.', score: 5 },
+        { qNum: 18, part: 'D', text: '读出句子：It\'s time to draw a picture.', score: 5 },
+        { qNum: 19, part: 'D', text: '读出歌谣：Tick, tock, tick, tock. It\'s time to get up.', score: 5 },
+        { qNum: 20, part: 'D', text: '用英文说出你放学后的活动安排（至少2句 It\'s time to...）。', score: 5 }
     ]
 });

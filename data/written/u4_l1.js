@@ -1,152 +1,120 @@
 /**
- * ✍️ Unit 4 Lesson 1: I like milk
+ * ✍️ Unit 4 Lesson 1: What do you like for breakfast?
  * 闽教版三年级下册 2025春季版
+ * Key words: breakfast, milk, bread, today, hungry, about
+ * Key patterns: What do you like for breakfast? I like eggs and noodles.
  */
 window.LOAD_QUIZ({
-    title: "Unit 4 Lesson 1: I like milk",
-    timeLimit: 600,
+    title: "Unit 4 Lesson 1: What do you like for breakfast?",
+    timeLimit: 540,
 
     questions: [
-        // ===========================
         // Part A: Listening
-        // ===========================
         {
             qNum: 1, part: 'A', type: 'select',
-            text: '听录音，选出你听到的食物。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'I like milk.',
-            options: ['A. milk', 'B. egg', 'C. bread', 'D. cake'],
-            correct: 'A. milk',
-            imageUri: 'img/milk.png'
+            text: '听录音，选出正确的中文意思。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'What do you like for breakfast?',
+            options: ['A. 你早餐喜欢吃什么？', 'B. 你午餐喜欢吃什么？', 'C. 你今天吃什么？', 'D. 你饿了吗？'],
+            correct: 'A. 你早餐喜欢吃什么？'
         },
         {
             qNum: 2, part: 'A', type: 'select',
-            text: '听录音，选出正确的翻译。<br><span style="font-size:14px;color:#666">(Listen and choose the meaning)</span>',
-            audioText: 'I like bread and eggs.',
-            options: ['A. 我喜欢牛奶和蛋。', 'B. 我喜欢面包和蛋。', 'C. 我不喜欢面包。', 'D. 这是我的早饭。'],
-            correct: 'B. 我喜欢面包和蛋。',
-            imageUri: 'img/bread.png'
+            text: '听录音，选出正确的回答。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'I like eggs and noodles.',
+            options: ['A. 我喜欢面包和牛奶。', 'B. 我喜欢鸡蛋和面条。', 'C. 我喜欢米饭和鱼。', 'D. 我喜欢水果。'],
+            correct: 'B. 我喜欢鸡蛋和面条。'
         },
         {
             qNum: 3, part: 'A', type: 'select',
-            text: '听录音选词填空：I have some ______.<br><span style="font-size:14px;color:#666">(Listen and complete)</span>',
-            audioText: 'I have some water.',
-            options: ['A. milk', 'B. water', 'C. juice', 'D. rice'],
-            correct: 'B. water'
+            text: '听录音，选出你听到的食物。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'I like milk and bread for breakfast.',
+            options: ['A. eggs', 'B. noodles', 'C. milk', 'D. rice'],
+            correct: 'C. milk'
         },
         {
             qNum: 4, part: 'A', type: 'select',
-            text: '听录音，选出正确的图片信息。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'Look at the cake. It is yummy.',
-            options: ['A. cake', 'B. cookie', 'C. bread', 'D. apple'],
-            correct: 'A. cake'
+            text: '听录音选词填空：I\'m ______. Let\'s have breakfast.<br><span style="font-size:14px;color:#666">(Listen and complete)</span>',
+            audioText: 'I\'m hungry. Let\'s have breakfast.',
+            options: ['A. happy', 'B. hungry', 'C. sleepy', 'D. thirsty'],
+            correct: 'B. hungry'
         },
         {
             qNum: 5, part: 'A', type: 'select',
-            text: '听对话，判断对错。录音说 "I don\'t like milk." 图片显示他在开心地喝牛奶。<br><span style="font-size:14px;color:#666">(True or False?)</span>',
-            audioText: 'I don\'t like milk.',
+            text: '听录音，判断对不对。录音说 "I like bread for breakfast." 图片显示面条。<br><span style="font-size:14px;color:#666">(True or False?)</span>',
+            audioText: 'I like bread for breakfast.',
             options: ['A. ✓ 对的', 'B. ✗ 错的'],
-            correct: 'B. ✗ 错的',
-            imageUri: 'img/milk.png'
+            correct: 'B. ✗ 错的'
         },
 
-        // ===========================
         // Part B: Reading
-        // ===========================
         {
             qNum: 6, part: 'B', type: 'select',
-            text: '"milk" 的中文意思是：',
-            options: ['A. 豆浆', 'B. 牛奶', 'C. 果汁', 'D. 水'],
-            correct: 'B. 牛奶'
+            text: '"breakfast" 的中文是什么？',
+            options: ['A. 午餐', 'B. 晚餐', 'C. 早餐', 'D. 点心'],
+            correct: 'C. 早餐'
         },
         {
             qNum: 7, part: 'B', type: 'select',
-            text: '"egg" 的中文意思是：',
-            options: ['A. 鸡蛋', 'B. 面包', 'C. 蛋糕', 'D. 饼干'],
-            correct: 'A. 鸡蛋'
+            text: '"hungry" 的中文意思是：',
+            options: ['A. 渴的', 'B. 饿的', 'C. 困的', 'D. 高兴的'],
+            correct: 'B. 饿的'
         },
         {
             qNum: 8, part: 'B', type: 'select',
             text: '找出不同类的一项。',
-            options: ['A. bread', 'B. milk', 'C. egg', 'D. clock'],
+            options: ['A. milk', 'B. bread', 'C. egg', 'D. clock'],
             correct: 'D. clock'
         },
         {
             qNum: 9, part: 'B', type: 'select',
-            text: '"I like bread." 的翻译是：',
-            options: ['A. 我喜欢面条。', 'B. 我喜欢面包。', 'C. 我有面包。', 'D. 这是面包。'],
-            correct: 'B. 我喜欢面包。',
-            imageUri: 'img/bread.png'
+            text: '"What about you?" 的翻译是：',
+            options: ['A. 你呢？', 'B. 你好吗？', 'C. 谢谢你。', 'D. 再见。'],
+            correct: 'A. 你呢？'
         },
         {
             qNum: 10, part: 'B', type: 'select',
-            text: '"yummy" 的含义是：',
-            options: ['A. 不好吃的', 'B. 好吃的/美味的', 'C. 甜的', 'D. 咸的'],
-            correct: 'B. 好吃的/美味的'
+            text: '"bread" 的中文是什么？',
+            options: ['A. 面条', 'B. 面包', 'C. 米饭', 'D. 蛋糕'],
+            correct: 'B. 面包'
         },
 
-        // ===========================
         // Part C: Writing
-        // ===========================
         {
             qNum: 11, part: 'C', type: 'select',
-            text: '补全单词：m _ l k',
+            text: '补全单词：m _ l k (牛奶)',
             options: ['A. a', 'B. e', 'C. i', 'D. o'],
             correct: 'C. i'
         },
         {
             qNum: 12, part: 'C', type: 'drag-sort',
             text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder)</span>',
-            words: ['I', 'like', 'milk', '.'],
-            correct: 'I like milk.'
+            words: ['I', 'like', 'eggs', 'and', 'noodles', '.'],
+            correct: 'I like eggs and noodles.'
         },
         {
             qNum: 13, part: 'C', type: 'select',
-            text: '补全单词：e g _',
-            options: ['A. a', 'B. g', 'C. e', 'D. o'],
-            correct: 'B. g'
+            text: '补全单词：br _ a d (面包)',
+            options: ['A. a', 'B. e', 'C. i', 'D. o'],
+            correct: 'B. e'
         },
         {
             qNum: 14, part: 'C', type: 'drag-sort',
             text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder)</span>',
-            words: ['I', 'like', 'bread', '.'],
-            correct: 'I like bread.'
+            words: ['I\'m', 'hungry', '.'],
+            correct: 'I\'m hungry.'
         },
         {
             qNum: 15, part: 'C', type: 'select',
-            text: '选出拼写正确的“水”。',
-            options: ['A. water', 'B. waater', 'C. wather', 'D. waterr'],
-            correct: 'A. water'
+            text: '选出正确的拼写（早餐）。',
+            options: ['A. brekfast', 'B. breakfast', 'C. breakfest', 'D. brekfist'],
+            correct: 'B. breakfast'
         },
 
-        // ===========================
         // Part D: Speaking
-        // ===========================
-        {
-            qNum: 16, part: 'D',
-            text: '读出单词：Milk, Bread, Egg.',
-            imageUri: 'img/milk.png',
-            score: 5
-        },
-        {
-            qNum: 17, part: 'D',
-            text: '看图说话：I like bread and eggs.',
-            imageUri: 'img/bread.png',
-            score: 5
-        },
-        {
-            qNum: 18, part: 'D',
-            text: '读出句子：The cake is yummy.',
-            score: 5
-        },
-        {
-            qNum: 19, part: 'D',
-            text: '说出你喜欢的早餐食物（英文）。',
-            score: 5
-        },
-        {
-            qNum: 20, part: 'D',
-            text: '看图认读：Water.',
-            score: 5
-        }
+        { qNum: 16, part: 'D', text: '读出单词：Breakfast, Milk, Bread, Hungry.', score: 5 },
+        { qNum: 17, part: 'D', text: '读出句子：What do you like for breakfast?', score: 5 },
+        { qNum: 18, part: 'D', text: '回答：What do you like for breakfast? (I like ... and ...)', score: 5 },
+        { qNum: 19, part: 'D', text: '读出句子：I\'m hungry. Let\'s have breakfast.', score: 5 },
+        { qNum: 20, part: 'D', text: '说出你早餐喜欢吃什么（英文）。', score: 5 }
     ]
 });

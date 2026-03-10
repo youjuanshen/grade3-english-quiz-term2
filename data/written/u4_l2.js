@@ -1,151 +1,120 @@
 /**
- * ✍️ Unit 4 Lesson 2: Do you like rice?
+ * ✍️ Unit 4 Lesson 2: Do you want some apple juice?
  * 闽教版三年级下册 2025春季版
+ * Key words: some, drink, juice, lunch
+ * Key patterns: What do you want to eat? I want a hamburger and a salad.
  */
 window.LOAD_QUIZ({
-    title: "Unit 4 Lesson 2: Do you like rice?",
-    timeLimit: 600,
+    title: "Unit 4 Lesson 2: Do you want some apple juice?",
+    timeLimit: 540,
 
     questions: [
-        // ===========================
         // Part A: Listening
-        // ===========================
         {
             qNum: 1, part: 'A', type: 'select',
-            text: '听录音，选出正确的回答。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'Do you like rice?',
-            options: ['A. Yes, I do.', 'B. It is rice.', 'C. I am rice.', 'D. Thank you.'],
-            correct: 'A. Yes, I do.',
-            imageUri: 'img/rice.png'
+            text: '听录音，选出正确的中文意思。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'Do you want some apple juice?',
+            options: ['A. 你想要一些苹果汁吗？', 'B. 你喜欢苹果吗？', 'C. 这是苹果汁。', 'D. 你午餐吃什么？'],
+            correct: 'A. 你想要一些苹果汁吗？'
         },
         {
             qNum: 2, part: 'A', type: 'select',
-            text: '听录音，选出正确的中文意思。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'Do you like noodles?',
-            options: ['A. 你喜欢面包吗？', 'B. 你喜欢面条吗？', 'C. 你喜欢米饭吗？', 'D. 你喜欢鸡蛋吗？'],
-            correct: 'B. 你喜欢面条吗？'
+            text: '听录音，选出正确的回答。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'What do you want to eat? I want a hamburger and a salad.',
+            options: ['A. 我想要面包。', 'B. 我想要汉堡和沙拉。', 'C. 我想喝牛奶。', 'D. 我想要米饭。'],
+            correct: 'B. 我想要汉堡和沙拉。'
         },
         {
             qNum: 3, part: 'A', type: 'select',
-            text: '听录音选词填空：Do you like ______?<br><span style="font-size:14px;color:#666">(Listen and complete)</span>',
-            audioText: 'Do you like fish?',
-            options: ['A. rice', 'B. bread', 'C. fish', 'D. milk'],
-            correct: 'C. fish',
-            imageUri: 'img/fish.png'
+            text: '听录音，选出你听到的饮品。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
+            audioText: 'I want some juice, please.',
+            options: ['A. milk', 'B. water', 'C. juice', 'D. tea'],
+            correct: 'C. juice'
         },
         {
             qNum: 4, part: 'A', type: 'select',
-            text: '听对话，选出正确答案。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'Do you like vegetables? No, I don\'t. I like fruit.',
-            options: ['A. 他喜欢蔬菜。', 'B. 他不喜欢蔬菜，喜欢水果。', 'C. 他喜欢水果和蔬菜。', 'D. 他不喜欢水果。'],
-            correct: 'B. 他不喜欢蔬菜，喜欢水果。'
+            text: '听录音选词填空：What do you want to ______?<br><span style="font-size:14px;color:#666">(Listen and complete)</span>',
+            audioText: 'What do you want to drink?',
+            options: ['A. eat', 'B. drink', 'C. play', 'D. read'],
+            correct: 'B. drink'
         },
         {
             qNum: 5, part: 'A', type: 'select',
-            text: '听录音，选出你听到的食物。<br><span style="font-size:14px;color:#666">(Listen and choose)</span>',
-            audioText: 'I like noodles. Noodles are yummy.',
-            options: ['A. rice', 'B. bread', 'C. noodles', 'D. eggs'],
-            correct: 'C. noodles'
+            text: '听录音，判断对不对。录音说 "I want some apple juice." 图片显示牛奶。<br><span style="font-size:14px;color:#666">(True or False?)</span>',
+            audioText: 'I want some apple juice.',
+            options: ['A. ✓ 对的', 'B. ✗ 错的'],
+            correct: 'B. ✗ 错的'
         },
 
-        // ===========================
         // Part B: Reading
-        // ===========================
         {
             qNum: 6, part: 'B', type: 'select',
-            text: '"noodles" 的中文是什么？',
-            options: ['A. 面包', 'B. 面条', 'C. 米饭', 'D. 蛋糕'],
-            correct: 'B. 面条'
+            text: '"juice" 的中文是什么？',
+            options: ['A. 牛奶', 'B. 果汁', 'C. 水', 'D. 茶'],
+            correct: 'B. 果汁'
         },
         {
             qNum: 7, part: 'B', type: 'select',
-            text: '"vegetables" 的中文是什么？',
-            options: ['A. 水果', 'B. 蔬菜', 'C. 面条', 'D. 零食'],
-            correct: 'B. 蔬菜'
+            text: '"lunch" 的中文是什么？',
+            options: ['A. 早餐', 'B. 午餐', 'C. 晚餐', 'D. 点心'],
+            correct: 'B. 午餐'
         },
         {
             qNum: 8, part: 'B', type: 'select',
-            text: '回答 "Do you like fish?" 如果不喜欢，应该说：',
-            options: ['A. Yes, I do.', 'B. No, I don\'t.', 'C. I am fish.', 'D. Fish is good.'],
-            correct: 'B. No, I don\'t.'
+            text: '"drink" 的中文意思是：',
+            options: ['A. 吃', 'B. 喝', 'C. 玩', 'D. 画'],
+            correct: 'B. 喝'
         },
         {
             qNum: 9, part: 'B', type: 'select',
             text: '找出不同类的一项。',
-            options: ['A. rice', 'B. noodles', 'C. fish', 'D. clock'],
-            correct: 'D. clock'
+            options: ['A. juice', 'B. milk', 'C. water', 'D. bread'],
+            correct: 'D. bread'
         },
         {
             qNum: 10, part: 'B', type: 'select',
-            text: '"fruit" 的中文是什么？',
-            options: ['A. 蔬菜', 'B. 水果', 'C. 面条', 'D. 鸡蛋'],
-            correct: 'B. 水果'
+            text: '"some" 的中文意思是：',
+            options: ['A. 很多', 'B. 一些', 'C. 没有', 'D. 全部'],
+            correct: 'B. 一些'
         },
 
-        // ===========================
         // Part C: Writing
-        // ===========================
         {
             qNum: 11, part: 'C', type: 'select',
-            text: '补全单词：n _ _ d l e s',
-            options: ['A. oo', 'B. ee', 'C. ii', 'D. aa'],
-            correct: 'A. oo'
+            text: '补全单词：j _ i c e (果汁)',
+            options: ['A. a', 'B. e', 'C. o', 'D. u'],
+            correct: 'D. u'
         },
         {
             qNum: 12, part: 'C', type: 'drag-sort',
             text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder)</span>',
-            words: ['Do', 'you', 'like', 'rice', '?'],
-            correct: 'Do you like rice?'
+            words: ['Do', 'you', 'want', 'some', 'juice', '?'],
+            correct: 'Do you want some juice?'
         },
         {
             qNum: 13, part: 'C', type: 'select',
-            text: '补全单词：f _ s h',
-            options: ['A. a', 'B. e', 'C. i', 'D. o'],
-            correct: 'C. i',
-            imageUri: 'img/fish.png'
+            text: '补全单词：l _ n c h (午餐)',
+            options: ['A. a', 'B. e', 'C. i', 'D. u'],
+            correct: 'D. u'
         },
         {
             qNum: 14, part: 'C', type: 'drag-sort',
             text: '连词成句。<br><span style="font-size:14px;color:#666">(Reorder)</span>',
-            words: ['No', ',', 'I', 'don\'t', '.'],
-            correct: 'No , I don\'t.'
+            words: ['I', 'want', 'a', 'hamburger', '.'],
+            correct: 'I want a hamburger.'
         },
         {
             qNum: 15, part: 'C', type: 'select',
-            text: '选出正确的拼写。',
-            options: ['A. vegetabels', 'B. vegitables', 'C. vegetables', 'D. vegatables'],
-            correct: 'C. vegetables'
+            text: '选出正确的拼写（喝）。',
+            options: ['A. drink', 'B. dring', 'C. drnik', 'D. drnk'],
+            correct: 'A. drink'
         },
 
-        // ===========================
         // Part D: Speaking
-        // ===========================
-        {
-            qNum: 16, part: 'D',
-            text: '读出句子：Do you like rice?',
-            imageUri: 'img/rice.png',
-            score: 5
-        },
-        {
-            qNum: 17, part: 'D',
-            text: '看图说话：I like noodles and fish.',
-            imageUri: 'img/fish.png',
-            score: 5
-        },
-        {
-            qNum: 18, part: 'D',
-            text: '回答问题：Do you like vegetables?',
-            score: 5
-        },
-        {
-            qNum: 19, part: 'D',
-            text: '读出单词：Fruit, Vegetables, Noodles.',
-            score: 5
-        },
-        {
-            qNum: 20, part: 'D',
-            text: '自我表达：说出三种你喜欢的食物。',
-            score: 5
-        }
+        { qNum: 16, part: 'D', text: '读出单词：Juice, Drink, Lunch, Some.', score: 5 },
+        { qNum: 17, part: 'D', text: '读出句子：Do you want some apple juice?', score: 5 },
+        { qNum: 18, part: 'D', text: '回答：What do you want to eat? (I want ...)', score: 5 },
+        { qNum: 19, part: 'D', text: '回答：What do you want to drink? (I want some ...)', score: 5 },
+        { qNum: 20, part: 'D', text: '说出你午餐想吃什么和喝什么（英文）。', score: 5 }
     ]
 });
