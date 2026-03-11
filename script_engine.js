@@ -227,12 +227,11 @@ function submit() {
 
     // 构建 payload (完全兼容上学期后台)
     const studentName = document.getElementById('studentNameDisplay').innerText;
-    const typeLabel = currentMode === 'written' ? "[笔试]" : "[口试]";
 
     const payload = {
         sessionId: getSessionId(),
         studentName: studentName,
-        lessonTitle: typeLabel + " " + currentData.title,
+        lessonTitle: "[下学期] " + currentData.title,
         examType: currentMode,
         score: totalScore,
         listeningScore: currentMode === 'written' ? scoreL : "",
