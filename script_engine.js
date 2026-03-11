@@ -1,9 +1,55 @@
 // ==================================================================
 // 🐾 script_engine.js V2.3 - 三年级下册专用 (增强稳定性版)
 // ==================================================================
-// 请将下方的 URL 替换为你在飞书中生成的 Webhook 链接
-const FEISHU_WEBHOOK_URL = "替换为你的飞书Webhook链接"; 
+// ===== Lark 多维表格配置 =====
+const LARK_APP_ID = "cli_a93bc13364f88060";
+const LARK_APP_SECRET = "om7RQokYqVlyQJOlIfdatcuFVQw85OIj";
+const LARK_APP_TOKEN = "Oy1dbiDS7aLIS8sqI1ZumqJSt8b";
+const LARK_TABLE_ID = "tblKpStf6IgveRvP";
 
+// 获取 Lark Access Token
+async function getLarkToken() {
+    const response = await fetch('https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            app_id: LARK_APP_ID,
+            app_secret: LARK_APP_SECRET
+        })
+    });
+    const data = await response.json();
+    return data.tenant_access_token;
+}
+
+// 发送测试成绩到 Lark 多维表格
+async function sendScoreToLark(scoreData) {
+    const token = await getLarkToken();
+    const response = await fetch(
+        `https://open.larksuite.com/open-apis/bitable/v1/apps/${LARK_APP_TOKEN}/tables/${LARK_TABLE_ID}/records`,
+        {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fields: {
+                    "时间": scoreData.time,
+                    "姓名": scoreData.studentName,
+                    "课程": scoreData.course,
+                    "用时": scoreData.duration,
+                    "总分": scoreData.total,
+                    "正确率": scoreData.accuracy,
+                    "听力": scoreData.listening,
+                    "阅读": scoreData.reading,
+                    "写作": scoreData.writing,
+                    "口语": scoreData.speaking
+                }
+            })
+        }
+    );
+    return await response.json();
+}
 const SPEAKING_RUBRIC = [
     "[1分] 需较多提示，仅能说出零散单词",
     "[2分] 能在提示下大致作答，但不完整",
@@ -226,58 +272,46 @@ function submit() {
     else if (percentNum >= 60) feedback = "💪 及格啦！再多一点点细心就更完美了！";
     else feedback = "🌱 别灰心！这是成长的机会，多练习一定会进步的！";
 
-    // 构建 payload (完全兼容上学期后台)
+    // 构建给 Lark 的数据包
     const studentName = document.getElementById('studentNameDisplay').innerText;
 
-    const payload = {
-        sessionId: getSessionId(),
+    const scoreData = {
+        time: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
         studentName: studentName,
-        lessonTitle: "[下学期] " + currentData.title,
-        examType: currentMode,
-        score: totalScore,
-        listeningScore: currentMode === 'written' ? scoreL : "",
-        readingScore: currentMode === 'written' ? scoreR : "",
-        writingScore: currentMode === 'written' ? scoreW : ""
+        course: "[下学期] " + currentData.title + (currentMode === 'speaking' ? ' (口试)' : ' (笔试)'),
+        duration: "完成", // 由于前端没计算具体时间，给个默认值
+        total: totalScore,
+        accuracy: percentNum + "%",
+        listening: currentMode === 'written' ? scoreL : 0,
+        reading: currentMode === 'written' ? scoreR : 0,
+        writing: currentMode === 'written' ? scoreW : 0,
+        speaking: currentMode === 'speaking' ? totalScore : 0
     };
 
-    console.log("📤 Submitting to Feishu / LocalStorage:", payload);
+    console.log("📤 Submitting to Lark Bitable / LocalStorage:", scoreData);
 
     // 【新增强力备份机制】：不管网络好不好，强制无条件先存到本地！
     let savedRecords = JSON.parse(localStorage.getItem('merryQuizRecords') || '[]');
     savedRecords.push({
-        ...payload,
-        submitTime: new Date().toLocaleString() // 加个看得懂的人类时间
+        ...scoreData,
+        submitTime: scoreData.time 
     });
     localStorage.setItem('merryQuizRecords', JSON.stringify(savedRecords));
 
-    const TIMEOUT_MS = 15000;
-    
-    // 把数据拼成链接后面的参数（绕过跨域拦截的绝招）
-    const query = Object.keys(payload).map(k => k + '=' + encodeURIComponent(payload[k])).join('&');
-    const fullUrl = FEISHU_WEBHOOK_URL + '?' + query;
-
-    // 使用 GET 请求和 no-cors 模式，防止浏览器报错
-    const submissionPromise = fetch(fullUrl, { method: 'GET', mode: 'no-cors' });
-    const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('TIMEOUT_ERROR')), TIMEOUT_MS)
-    );
-
-    Promise.race([submissionPromise, timeoutPromise])
+    // 调用 Lark 接口
+    sendScoreToLark(scoreData)
         .then(response => {
-            if (response.status !== 200 && response.status !== 0) {
-                throw new Error('SERVER_BUSY_OR_ERROR');
+            if (response.code === 0) {
+                console.log("✅ 飞书多维表格提交成功！", response);
+                showFinalUI_v2(totalScore, maxScore, feedback, studentName, true);
+            } else {
+                console.error("❌ 飞书多维表格报错：", response);
+                throw new Error(response.msg || "字段不匹配或其他错误");
             }
-            showFinalUI_v2(totalScore, maxScore, feedback, studentName, true);
         })
         .catch(error => {
-            let message = "❌ 成绩提交失败，请检查网络。";
-            if (error.message === 'TIMEOUT_ERROR') {
-                message = "❌ 提交超时 (40秒)。请排队稍后重试。";
-            } else if (error.message === 'SERVER_BUSY_OR_ERROR') {
-                message = "❌ 服务器繁忙，请稍后重试。";
-            }
-            console.error("提交出错:", error);
-            showFinalUI_v2(totalScore, maxScore, feedback, studentName, false, message);
+            console.error("Submission failed:", error);
+            showFinalUI_v2(totalScore, maxScore, feedback, studentName, false, "❌ 提交飞书报错（可能没有'姓名'列等）：" + error.message);
         });
 }
 
