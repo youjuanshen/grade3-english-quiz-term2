@@ -1,7 +1,8 @@
 // ==================================================================
 // 🐾 script_engine.js V2.3 - 三年级下册专用 (增强稳定性版)
 // ==================================================================
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyR1D1HVmrmW7PHuIP-iYgSTcNFVHWBfoXpYIotWWQkXrIYVK8tc6YhzQEoGVDnxpI/exec";
+// 请将下方的 URL 替换为你在飞书中生成的 Webhook 链接
+const FEISHU_WEBHOOK_URL = "替换为你的飞书Webhook链接"; 
 
 const SPEAKING_RUBRIC = [
     "[1分] 需较多提示，仅能说出零散单词",
@@ -239,12 +240,23 @@ function submit() {
         writingScore: currentMode === 'written' ? scoreW : ""
     };
 
-    console.log("📤 Submitting:", payload);
+    console.log("📤 Submitting to Feishu / LocalStorage:", payload);
 
-    const TIMEOUT_MS = 40000;
+    // 【新增强力备份机制】：不管网络好不好，强制无条件先存到本地！
+    let savedRecords = JSON.parse(localStorage.getItem('merryQuizRecords') || '[]');
+    savedRecords.push({
+        ...payload,
+        submitTime: new Date().toLocaleString() // 加个看得懂的人类时间
+    });
+    localStorage.setItem('merryQuizRecords', JSON.stringify(savedRecords));
+
+    const TIMEOUT_MS = 15000;
+    
+    // 把数据拼成链接后面的参数（绕过跨域拦截的绝招）
     const query = Object.keys(payload).map(k => k + '=' + encodeURIComponent(payload[k])).join('&');
-    const fullUrl = GOOGLE_SCRIPT_URL + '?' + query;
+    const fullUrl = FEISHU_WEBHOOK_URL + '?' + query;
 
+    // 使用 GET 请求和 no-cors 模式，防止浏览器报错
     const submissionPromise = fetch(fullUrl, { method: 'GET', mode: 'no-cors' });
     const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('TIMEOUT_ERROR')), TIMEOUT_MS)

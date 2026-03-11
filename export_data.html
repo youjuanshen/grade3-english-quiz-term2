@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成绩导出工具 (断网可用)</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        button { padding: 15px 30px; font-size: 18px; background: #4caf50; color: white; border: none; border-radius: 25px; cursor: pointer; }
+        textarea { width: 100%; height: 300px; margin-top: 20px; font-family: monospace; }
+        table { margin: 20px auto; border-collapse: collapse; width: 100%; max-width: 800px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>📦 本地成绩保险箱</h1>
+    <p>无论网络是否连接，学生的所有做题记录都会被强制保留在这台设备的“本地缓存”中。<br>点击下方按钮，即可将它们一次性取出并下载为 Excel 可读的文件。</p>
+    
+    <button onclick="downloadCSV()">⬇️ 一键导出所有成绩 (.csv)</button>
+    &nbsp;&nbsp;&nbsp;
+    <button onclick="clearData()" style="background:#f44336;">🗑️ 清空当前设备数据</button>
+
+    <div id="tableContainer"></div>
+
+    <script>
+        function loadData() {
+            return JSON.parse(localStorage.getItem('merryQuizRecords') || '[]');
+        }
+
+        function renderTable() {
+            const data = loadData();
+            if (data.length === 0) {
+                document.getElementById('tableContainer').innerHTML = "<p>暂无数据记录哦~</p>";
+                return;
+            }
+            
+            let html = `<table><tr>
+                <th>提交时间</th><th>学生姓名</th><th>课程</th><th>模式</th><th>总分</th><th>听力</th><th>阅读</th><th>写作</th>
+            </tr>`;
+            
+            data.forEach(row => {
+                html += `<tr>
+                    <td>${row.submitTime || row.timestamp || '-'}</td>
+                    <td>${row.studentName}</td>
+                    <td>${row.lessonTitle}</td>
+                    <td>${row.examType}</td>
+                    <td><strong style="color:red">${row.score}</strong></td>
+                    <td>${row.listeningScore}</td>
+                    <td>${row.readingScore}</td>
+                    <td>${row.writingScore}</td>
+                </tr>`;
+            });
+            html += "</table>";
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+
+        function downloadCSV() {
+            const data = loadData();
+            if (data.length === 0) {
+                alert("没有可导出的数据哦！");
+                return;
+            }
+
+            // CSV 头部加 BOM 控制防止中文乱码 (UTF-8 BOM)
+            let csvContent = "\uFEFF";
+            csvContent += "提交时间,学生姓名,课程,模式,总分,听力(满25),阅读(满25),写作(满25)\n";
+
+            data.forEach(row => {
+                let rowArray = [
+                    `"${row.submitTime || row.timestamp || ''}"`,
+                    `"${row.studentName}"`,
+                    `"${row.lessonTitle}"`,
+                    `"${row.examType}"`,
+                    row.score,
+                    row.listeningScore,
+                    row.readingScore,
+                    row.writingScore
+                ];
+                csvContent += rowArray.join(",") + "\n";
+            });
+
+            // 生成下载链接并触发
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `三年级英语测试成绩_导出于_${new Date().toLocaleDateString('zh-CN')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function clearData() {
+            if (confirm("⚠️ 警告：这会清空这台设备上所有已存的测试数据，请确定你已经导出了表格！确定要清空吗？")) {
+                localStorage.removeItem('merryQuizRecords');
+                renderTable();
+                alert("数据已清空。");
+            }
+        }
+
+        // 初始化渲染
+        renderTable();
+    </script>
+</body>
+</html>
