@@ -40,8 +40,9 @@ window.LOAD_QUIZ({
         },
         {
             qNum: 5, part: 'A', type: 'select',
-            text: '听录音，判断对不对。录音说 "I like bread for breakfast." 图片显示面条。<br><span style="font-size:14px;color:#666">(True or False?)</span>',
+            text: '听录音，判断对不对。录音说 "I like bread for breakfast." 图片显示米饭。<br><span style="font-size:14px;color:#666">(True or False?)</span>',
             audioText: 'I like bread for breakfast.',
+            imageUri: 'rice.png',
             options: ['A. ✓ 对的', 'B. ✗ 错的'],
             correct: 'B. ✗ 错的'
         },

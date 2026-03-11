@@ -55,6 +55,7 @@ window.LOAD_QUIZ({
             type: 'select',
             text: '听录音，判断对不对。录音说："This is a bear." 但图片是一只熊猫。<br><span style="font-size:14px;color:#666">(True or False?)</span>',
             audioText: 'This is a bear.',
+            imageUri: 'panda.png',
             options: ['A. ✓ 对的', 'B. ✗ 错的'],
             correct: 'B. ✗ 错的'
         },
@@ -160,6 +161,7 @@ window.LOAD_QUIZ({
             qNum: 17,
             part: 'D',
             text: '看图说话：This is a bear. It\'s big.',
+            imageUri: 'bear.png',
             score: 5
         },
         {
@@ -172,6 +174,7 @@ window.LOAD_QUIZ({
             qNum: 19,
             part: 'D',
             text: '看图说话：That is a horse. It can run fast.',
+            imageUri: 'horse.png',
             score: 5
         },
         {

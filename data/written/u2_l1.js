@@ -42,6 +42,7 @@ window.LOAD_QUIZ({
             qNum: 5, part: 'A', type: 'select',
             text: '听录音，判断对不对。录音说 "Size S." 但图片显示 L号。<br><span style="font-size:14px;color:#666">(True or False?)</span>',
             audioText: 'Size S.',
+            imageUri: 'tshirt.png',
             options: ['A. ✓ 对的', 'B. ✗ 错的'],
             correct: 'B. ✗ 错的'
         },

@@ -44,6 +44,7 @@ window.LOAD_QUIZ({
             qNum: 5, part: 'A', type: 'select',
             text: '听录音，判断对不对。录音说 "Those are horses." 但图片是熊猫。<br><span style="font-size:14px;color:#666">(True or False?)</span>',
             audioText: 'Those are horses.',
+            imageUri: 'panda.png',
             options: ['A. ✓ 对的', 'B. ✗ 错的'],
             correct: 'B. ✗ 错的'
         },
@@ -122,7 +123,7 @@ window.LOAD_QUIZ({
         { qNum: 16, part: 'D', text: '请读出单词：Small, Ear, Eye, Long, Leg.', score: 5 },
         { qNum: 17, part: 'D', text: '读出句子：These are pandas. They have small ears.', score: 5 },
         { qNum: 18, part: 'D', text: '读出句子：Those are horses. They have long legs.', score: 5 },
-        { qNum: 19, part: 'D', text: '看图说话：Baby pandas. They are lovely.', score: 5 },
+        { qNum: 19, part: 'D', text: '看图说话：Baby pandas. They are lovely.', imageUri: 'panda.png', score: 5 },
         { qNum: 20, part: 'D', text: '读出句子：They have black eyes.', score: 5 }
     ]
 });

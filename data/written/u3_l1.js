@@ -42,6 +42,7 @@ window.LOAD_QUIZ({
             qNum: 5, part: 'A', type: 'select',
             text: '听录音，判断对不对。录音说 "It\'s eleven o\'clock." 但图片显示 12:00。<br><span style="font-size:14px;color:#666">(True or False?)</span>',
             audioText: 'It\'s eleven o\'clock.',
+            imageUri: 'clock.png',
             options: ['A. ✓ 对的', 'B. ✗ 错的'],
             correct: 'B. ✗ 错的'
         },

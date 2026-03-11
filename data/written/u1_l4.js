@@ -124,6 +124,6 @@ window.LOAD_QUIZ({
         { qNum: 17, part: 'D', text: '读出句子：This is a face. These are two eyes.', score: 5 },
         { qNum: 18, part: 'D', text: '读出句子：Look! It\'s a cat. These are two ears.', score: 5 },
         { qNum: 19, part: 'D', text: '说出动物的身体部位：eye, ear, nose, mouth, leg.', score: 5 },
-        { qNum: 20, part: 'D', text: '看图描述一个动物（用 This is... These are... 句型）。', score: 5 }
+        { qNum: 20, part: 'D', text: '看图描述一个动物（用 This is... These are... 句型）。', imageUri: 'cat.png', score: 5 }
     ]
 });
