@@ -1,8 +1,7 @@
 // ==================================================================
 // 🐾 script_engine.js V2.3 - 三年级下册专用 (增强稳定性版)
 // ==================================================================
-// 请将下方的 URL 替换为你在“飞书捷径(AnyCross)”或“多维表格(Base)自动化”中生成的 Webhook URL
-const FEISHU_WEBHOOK_URL = "https://www.feishu.cn/flow/api/trigger/webhook/e0xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"; // <-- 替换为你的真实飞书 Webhook 链接
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyR1D1HVmrmW7PHuIP-iYgSTcNFVHWBfoXpYIotWWQkXrIYVK8tc6YhzQEoGVDnxpI/exec";
 
 const SPEAKING_RUBRIC = [
     "[1分] 需较多提示，仅能说出零散单词",
@@ -238,26 +237,16 @@ function submit() {
         score: totalScore,
         listeningScore: currentMode === 'written' ? scoreL : "",
         readingScore: currentMode === 'written' ? scoreR : "",
-        writingScore: currentMode === 'written' ? scoreW : "",
-        timestamp: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+        writingScore: currentMode === 'written' ? scoreW : ""
     };
 
-    console.log("📤 Submitting to Feishu:", payload);
+    console.log("📤 Submitting:", payload);
 
-    const TIMEOUT_MS = 15000; // 飞书在国内通常很快，15秒足矣
+    const TIMEOUT_MS = 40000;
+    const query = Object.keys(payload).map(k => k + '=' + encodeURIComponent(payload[k])).join('&');
+    const fullUrl = GOOGLE_SCRIPT_URL + '?' + query;
 
-    // 针对飞书 Webhook，通常使用 POST 请求和 JSON 格式。
-    // 为了防止跨域阻拦（CORS），如果我们在本地 html 运行，可能需要飞书那边开启允许跨域
-    // 飞书捷径 (Anycross) 的 Webhook 默认支持接收 JSON
-    const submissionPromise = fetch(FEISHU_WEBHOOK_URL, {
-        method: 'POST',
-        // mode: 'no-cors', // 如果遇到跨域问题且不关心返回值，可以取消注释这条，但通常我们需要知道成功与否
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-    });
-
+    const submissionPromise = fetch(fullUrl, { method: 'GET', mode: 'no-cors' });
     const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('TIMEOUT_ERROR')), TIMEOUT_MS)
     );
