@@ -9,7 +9,7 @@ const LARK_TABLE_ID = "tblKpStf6IgveRvP";
 
 // 获取 Lark Access Token
 async function getLarkToken() {
-    const response = await fetch('https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
+    const response = await fetch('https://lark-proxy.shenyoujuan387.workers.dev/open-apis/auth/v3/tenant_access_token/internal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -25,7 +25,7 @@ async function getLarkToken() {
 async function sendScoreToLark(scoreData) {
     const token = await getLarkToken();
     const response = await fetch(
-        `https://open.larksuite.com/open-apis/bitable/v1/apps/${LARK_APP_TOKEN}/tables/${LARK_TABLE_ID}/records`,
+        `https://lark-proxy.shenyoujuan387.workers.dev/open-apis/bitable/v1/apps/${LARK_APP_TOKEN}/tables/${LARK_TABLE_ID}/records`,
         {
             method: 'POST',
             headers: {
