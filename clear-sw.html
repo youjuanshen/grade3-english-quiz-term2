@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>强制清除所有缓存和 SW</title>
+</head>
+<body>
+    <h2 style="text-align: center; padding: 50px;">正在深度清理微信和Safari残留...</h2>
+    <script>
+        // 1. Unregister all service workers
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+        
+        // 2. Clear all cache storage
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (let name of names)
+                    caches.delete(name);
+            });
+        }
+        
+        // 3. Clear localStorage just in case
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // 4. Redirect after 1 second
+        setTimeout(function() {
+            window.location.replace("index.html?force=" + Date.now());
+        }, 1200);
+    </script>
+</body>
+</html>
