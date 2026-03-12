@@ -316,11 +316,19 @@ function submit() {
     // 构建给 Lark 的数据包
     const studentName = document.getElementById('studentNameDisplay').innerText;
 
+    // 计算实际用时
+    const maxTime = currentData.timeLimit || 600;
+    let timeUsedSeconds = maxTime - timeLeft;
+    if (timeUsedSeconds < 0) timeUsedSeconds = 0;
+    const minUsed = Math.floor(timeUsedSeconds / 60);
+    const secUsed = timeUsedSeconds % 60;
+    const durationStr = minUsed > 0 ? `${minUsed}分${secUsed}秒` : `${secUsed}秒`;
+
     const scoreData = {
         time: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }), // 这个字段在你的飞书表里其实是个文本而不是日期类型
         studentName: studentName,
         course: "[下学期] " + currentData.title, // 去掉括号(笔试)/(口试)，才能匹配到同一行
-        duration: "完成", 
+        duration: durationStr, 
         total: totalScore,
         accuracy: percentNum + "%",
         listening: currentMode === 'written' ? scoreL : 0,
