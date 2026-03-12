@@ -37,18 +37,23 @@ async function getLarkToken() {
     return data.tenant_access_token;
 }
 
-// 建立强大的：失败自动无感重试机制！！！
-async function fetchWithRetry(url, options, maxRetries = 2) {
+// 建立强大的：失败自动无感重试机制！！！（增加了单次请求超时控制针对老旧设备）
+async function fetchWithRetry(url, options, maxRetries = 2, timeoutMs = 8000) {
     for (let i = 0; i < maxRetries; i++) {
         try {
-            const res = await fetch(url, options);
+            const fetchPromise = fetch(url, options);
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('TIMEOUT_ERROR')), timeoutMs)
+            );
+            // 加上独立超时针管，避免老手机卡死一直等
+            const res = await Promise.race([fetchPromise, timeoutPromise]);
             if (res.ok || res.status === 400) return res; 
         } catch (e) {
-            console.warn(`网络请求失败，正在进行第 ${i+1} 次无感重试...`, e);
+            console.warn(`网络请求失败(${e.message})，正在进行第 ${i+1} 次无感重试...`);
             if (i === maxRetries - 1) throw e;
         }
         // 等待 1 秒后再重试
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 800));
     }
 }
 
@@ -60,7 +65,7 @@ async function sendScoreToLark(scoreData) {
         'Content-Type': 'application/json'
     };
 
-    // 1. 查找是否已经存在该学生、该课程的记录
+    // 1. 查找是否已经存在该学生、该课程的记录（给老设备的降级处理：如果查得太慢，放弃合并直接新建）
     const filterStr = `CurrentValue.[姓名]="${scoreData.studentName}"&&CurrentValue.[课程]="${scoreData.course}"`;
     const searchUrl = `https://lark-proxy.shenyoujuan387.workers.dev/open-apis/bitable/v1/apps/${LARK_APP_TOKEN}/tables/${LARK_TABLE_ID}/records?filter=${encodeURIComponent(filterStr)}`;
     
@@ -68,14 +73,15 @@ async function sendScoreToLark(scoreData) {
     let existingFields = {};
     
     try {
-        const searchRes = await fetchWithRetry(searchUrl, { method: 'GET', headers }, 2);
+        // 如果查询超过 4秒 就立刻放弃查询！以保证能顺利走到下一步提交
+        const searchRes = await fetchWithRetry(searchUrl, { method: 'GET', headers }, 1, 4000);
         const searchData = await searchRes.json();
         if (searchData.code === 0 && searchData.data && searchData.data.items && searchData.data.items.length > 0) {
             existingRecordId = searchData.data.items[0].record_id;
             existingFields = searchData.data.items[0].fields || {};
         }
     } catch (e) {
-        console.warn("查询飞书中已存在记录失败，本次改为直接新建行:", e);
+        console.warn("查询重试超时或失败，触发iPhone 7降级保护：本次不合并，直接创建新记录");
     }
 
     let method = 'POST';
@@ -121,7 +127,7 @@ async function sendScoreToLark(scoreData) {
         method: method,
         headers: headers,
         body: JSON.stringify(payload)
-    }, 2);
+    }, 2, 12000); // 真正提交数据的请求给宽裕的12秒单次时间
     
     return await response.json();
 }
