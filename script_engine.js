@@ -57,7 +57,7 @@ async function fetchWithRetry(url, options, maxRetries = 2, timeoutMs = 8000) {
     }
 }
 
-// 发送测试成绩到 Lark 多维表格（支持合并笔试和口试）
+// 发送测试成绩到 Lark 多维表格（极速直连版本：不搜索，全模式直接推送数据！）
 async function sendScoreToLark(scoreData) {
     const token = await getLarkToken();
     const headers = {
@@ -65,66 +65,25 @@ async function sendScoreToLark(scoreData) {
         'Content-Type': 'application/json'
     };
 
-    // 1. 查找是否已经存在该学生、该课程的记录（给老设备的降级处理：如果查得太慢，放弃合并直接新建）
-    const filterStr = `CurrentValue.[姓名]="${scoreData.studentName}"&&CurrentValue.[课程]="${scoreData.course}"`;
-    const searchUrl = `https://lark-proxy.shenyoujuan387.workers.dev/open-apis/bitable/v1/apps/${LARK_APP_TOKEN}/tables/${LARK_TABLE_ID}/records?filter=${encodeURIComponent(filterStr)}`;
-    
-    let existingRecordId = null;
-    let existingFields = {};
-    
-    try {
-        // 如果查询超过 4秒 就立刻放弃查询！以保证能顺利走到下一步提交
-        const searchRes = await fetchWithRetry(searchUrl, { method: 'GET', headers }, 1, 4000);
-        const searchData = await searchRes.json();
-        if (searchData.code === 0 && searchData.data && searchData.data.items && searchData.data.items.length > 0) {
-            existingRecordId = searchData.data.items[0].record_id;
-            existingFields = searchData.data.items[0].fields || {};
-        }
-    } catch (e) {
-        console.warn("查询重试超时或失败，触发iPhone 7降级保护：本次不合并，直接创建新记录");
-    }
-
-    let method = 'POST';
-    let url = `https://lark-proxy.shenyoujuan387.workers.dev/open-apis/bitable/v1/apps/${LARK_APP_TOKEN}/tables/${LARK_TABLE_ID}/records`;
-    
-    // 合并成绩逻辑
-    let mergedTotal = scoreData.total;
-    let newListening = scoreData.listening;
-    let newReading = scoreData.reading;
-    let newWriting = scoreData.writing;
-    let newSpeaking = scoreData.speaking;
-
-    if (existingRecordId) {
-        method = 'PUT'; // 存在则更新
-        url = `${url}/${existingRecordId}`;
-        
-        // 保留或者合并已有的成绩
-        newListening = newListening > 0 ? newListening : (existingFields['听力'] || 0);
-        newReading = newReading > 0 ? newReading : (existingFields['阅读'] || 0);
-        newWriting = newWriting > 0 ? newWriting : (existingFields['写作'] || 0);
-        newSpeaking = newSpeaking > 0 ? newSpeaking : (existingFields['口语'] || 0);
-        
-        // 重新计算总分和正确率
-        mergedTotal = newListening + newReading + newWriting + newSpeaking;
-    }
+    const url = `https://lark-proxy.shenyoujuan387.workers.dev/open-apis/bitable/v1/apps/${LARK_APP_TOKEN}/tables/${LARK_TABLE_ID}/records`;
 
     const payload = {
         fields: {
-            "时间": scoreData.time,      // 这里改用时间戳，修复 DatetimeFieldConvFail 报错
+            "时间": scoreData.time,
             "姓名": scoreData.studentName,
             "课程": scoreData.course,
             "用时": scoreData.duration,
-            "总分": mergedTotal,
-            "正确率": mergedTotal + "%",   // 因为满分一直是100，直接用总分加%就是正确率
-            "听力": newListening,
-            "阅读": newReading,
-            "写作": newWriting,
-            "口语": newSpeaking
+            "总分": scoreData.total,
+            "正确率": scoreData.accuracy,
+            "听力": scoreData.listening,
+            "阅读": scoreData.reading,
+            "写作": scoreData.writing,
+            "口语": scoreData.speaking
         }
     };
 
     const response = await fetchWithRetry(url, {
-        method: method,
+        method: 'POST',
         headers: headers,
         body: JSON.stringify(payload)
     }, 2, 12000); // 真正提交数据的请求给宽裕的12秒单次时间
@@ -140,8 +99,30 @@ const SPEAKING_RUBRIC = [
 ];
 
 let currentData = null;
-let currentMode = 'written'; // 'written' 或 'speaking'
+let currentMode = 'combined'; // 'written', 'speaking', 或 'combined'
+let combinedPhase = 'written'; // 用来记录 combined 模式进行到了哪一步 ('written' -> 'speaking')
 let currentQIndex = 0;
+
+window.startCombinedSpeaking = function() {
+    toggleDisplay('waitTeacherBox', false);
+    toggleDisplay('quizInterface', true);
+    combinedPhase = 'speaking';
+    currentQIndex = 0;
+    renderQuestion();
+};
+
+// 工具方法：统一获取当前模式应该显示的题目
+function getRelevantQs() {
+    if (!currentData) return [];
+    return currentData.questions.filter(q => {
+        if (currentMode === 'written') return q.part !== 'D';
+        if (currentMode === 'speaking') return q.part === 'D';
+        if (currentMode === 'combined') {
+            return combinedPhase === 'written' ? q.part !== 'D' : q.part === 'D';
+        }
+        return false;
+    });
+}
 let answers = {};
 let timerInterval;
 let timeLeft = 0;
@@ -209,11 +190,7 @@ function cleanString(str) {
 }
 
 function renderQuestion() {
-    const allQs = currentData.questions;
-    const relevantQs = allQs.filter(q => {
-        if (currentMode === 'written') return q.part === 'A' || q.part === 'B' || q.part === 'C';
-        return q.part === 'D';
-    });
+    const relevantQs = getRelevantQs();
 
     if (relevantQs.length === 0) {
         document.getElementById('qContent').innerHTML = "<p style='padding:20px;'>本课暂无该部分的题目。</p>";
@@ -289,9 +266,43 @@ function renderQuestion() {
 }
 
 // ============================================================
-// 🔥 评分 + 提交 (完全兼容上学期后台格式) 🔥
+// 🔥 评分 + 提交 (统一流转入口) 🔥
 // ============================================================
 function submit() {
+    // 【阶段 1】：如果是在综合模式下，刚刚做完笔试，那么暂停提交，并唤出“等待老师”界面
+    if (currentMode === 'combined' && combinedPhase === 'written') {
+        if (timerInterval) clearInterval(timerInterval);
+        toggleDisplay('quizInterface', false);
+        
+        let waitBox = document.getElementById('waitTeacherBox');
+        if (!waitBox) {
+            waitBox = document.createElement('div');
+            waitBox.id = 'waitTeacherBox';
+            waitBox.className = 'card';
+            waitBox.style.textAlign = 'center';
+            waitBox.style.marginTop = '20px';
+            waitBox.innerHTML = `
+                <h2 style="color:#FF9800; font-size:28px; margin:20px 0;">🎉 笔试完毕！</h2>
+                <div style="font-size:18px; margin-bottom:20px; font-weight:bold; color:#1976d2;">
+                    ✋ 笔试部分已安全做完
+                </div>
+                <div style="background:#e1f5fe; border:3px dashed #03a9f4; border-radius:15px; padding:15px; margin-bottom:20px;">
+                    <p style="font-size:18px; font-weight:bold; color:#f44336; margin:0;">请马上举手，或者拿着设备去找沈老师进行<span style="font-size:22px;">口语测试</span>吧！</p>
+                    <p style="color:#666; font-size:14px; margin-top:5px;">（⚠️你的成绩还在页面里挂着未上传，千万不要关闭本网页⚠️）</p>
+                </div>
+
+                <div style="margin-top:30px; border-top:2px dashed #eee; padding-top:20px;">
+                    <p style="color:#ccc; font-size:12px; margin-bottom:10px;">--- 👇 沈老师专属通道 👇 ---</p>
+                    <button class="btn-primary" onclick="startCombinedSpeaking()" style="background:#4caf50; font-size:20px; padding:15px; border-radius:30px; box-shadow:0 6px 15px rgba(76,175,80,0.4);">👨‍🏫 老师点击：开始口语</button>
+                </div>
+            `;
+            document.querySelector('.container').appendChild(waitBox);
+        }
+        toggleDisplay('waitTeacherBox', true);
+        return; // 执行到这里暂停，直接退回系统
+    }
+
+    // 【阶段 2】：普通模式，或者综合模式的最后阶段（两部分都做完了）
     if (timerInterval) clearInterval(timerInterval);
     toggleDisplay('quizInterface', false);
 
@@ -299,7 +310,7 @@ function submit() {
     const submittingBox = document.getElementById('submittingBox');
     submittingBox.innerHTML = `
         <div class="cute-loader">🚀</div>
-        <div>正在飞速上传成绩...</div>
+        <div>正在极速上传所有成绩...</div>
         <div style="font-size:12px; color:#999; margin-top:10px;">(请稍候，不要关闭窗口)</div>
     `;
     toggleDisplay('submittingBox', true);
@@ -307,30 +318,26 @@ function submit() {
     let totalScore = 0;
     let scoreL = 0, scoreR = 0, scoreW = 0;
     let maxScore = 0;
+    let speakingScore = 0;
 
-    if (currentMode === 'speaking') {
-        // 口语模式：只看 Part D
-        currentData.questions.forEach(q => {
-            if (q.part !== 'D') return;
-            const qMax = q.score || 5;
-            maxScore += qMax;
-            totalScore += parseInt(answers['Q' + q.qNum]) || 0;
-        });
-    } else {
-        // 笔试模式：只看 Part A/B/C
-        currentData.questions.forEach(q => {
-            if (q.part === 'D') return; // 跳过口语题
-            const qMax = q.score || 5; // 默认每题5分，15题共75分
-            maxScore += qMax;
+    // 通用分数计算方法（综合三部分与口语分数）
+    currentData.questions.forEach(q => {
+        // 过滤不需要算分的题
+        if (currentMode === 'written' && q.part === 'D') return;
+        if (currentMode === 'speaking' && q.part !== 'D') return;
 
+        const qMax = q.score || 5; 
+        maxScore += qMax;
+
+        if (q.part === 'D') {
+            const s = parseInt(answers['Q' + q.qNum]) || 0;
+            totalScore += s;
+            speakingScore += s;
+        } else {
             const userAns = answers['Q' + q.qNum];
             let isCorrect = false;
 
-            if (q.type === 'drag-sort') {
-                if (userAns && cleanString(userAns) === cleanString(q.correct)) isCorrect = true;
-            } else {
-                if (userAns && cleanString(userAns) === cleanString(q.correct)) isCorrect = true;
-            }
+            if (userAns && cleanString(userAns) === cleanString(q.correct)) isCorrect = true;
 
             if (isCorrect) {
                 totalScore += qMax;
@@ -340,8 +347,8 @@ function submit() {
             } else {
                 console.warn(`❌ Q${q.qNum}: [${userAns}] vs [${q.correct}]`);
             }
-        });
-    }
+        }
+    });
 
     let percentNum = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
     console.log(`📊 得分: ${totalScore}/${maxScore} (${percentNum}%) | L:${scoreL} R:${scoreR} W:${scoreW}`);
@@ -366,7 +373,7 @@ function submit() {
         listening: currentMode === 'written' ? scoreL : 0,
         reading: currentMode === 'written' ? scoreR : 0,
         writing: currentMode === 'written' ? scoreW : 0,
-        speaking: currentMode === 'speaking' ? totalScore : 0
+        speaking: speakingScore
     };
 
     console.log("📤 Submitting to Lark Bitable / LocalStorage:", scoreData);
@@ -426,7 +433,7 @@ function showFinalUI_v2(totalScore, maxScore, feedback, name, success, errorMess
     box.innerHTML = `
         <h1>🎉 挑战结束！</h1>
         <div style="font-size:18px; color:#2196F3; font-weight:bold; margin:5px 0;">${name} 同学</div>
-        <div style="font-size:14px; color:#666;">你的${currentMode === 'written' ? '笔试' : '口语'}得分</div>
+        <div style="font-size:14px; color:#666;">你的总得分</div>
         <div style="font-size:60px; color:#f44336; font-weight:bold; margin:10px 0;">
             ${totalScore}<span style="font-size:20px; color:#999;"> / ${maxScore} 分</span>
         </div>
@@ -453,18 +460,12 @@ function nextQ() {
 
 
 function relevantQs_length() {
-    return currentData.questions.filter(q => {
-        if (currentMode === 'written') return q.part === 'A' || q.part === 'B' || q.part === 'C';
-        return q.part === 'D';
-    }).length;
+    return getRelevantQs().length;
 }
 
 function updateFill(qid) {
     answers['Q' + qid] = event.target.value;
-    const relevantQs = currentData.questions.filter(q => {
-        if (currentMode === 'written') return q.part === 'A' || q.part === 'B' || q.part === 'C';
-        return q.part === 'D';
-    });
+    const relevantQs = getRelevantQs();
     // 更新按钮状态
     const btnNext = document.getElementById('btnNext');
     const btnSubmit = document.getElementById('btnSubmit');

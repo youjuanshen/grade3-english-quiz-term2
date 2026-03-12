@@ -117,8 +117,9 @@
     <!-- 脚本引入 -->
     <script src="script_engine.js?v=2.4"></script>
     <script>
-        initEngine('written'); // 初始化为笔试模式
-
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestedMode = urlParams.get('mode') || 'combined';
+        initEngine(requestedMode);
         const STUDENTS = [
             "1. 张宇豪", "2. 张佳寒", "3. 张睿渊", "4. 张羽韬", "5. 张美茹",
             "6. 张嘉钦", "7. 卢梦婷", "8. 张悦萱", "9. 张语涵", "10. 张英豪",
