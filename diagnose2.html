@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iPhone 7 网络诊断</title>
+<style>
+  body { font-family: -apple-system, sans-serif; padding: 16px; background: #f0f0f0; }
+  h2 { font-size: 18px; }
+  .result { background: white; border-radius: 8px; padding: 12px; margin: 8px 0; font-size: 14px; }
+  .ok { color: green; } .err { color: red; } .pending { color: gray; }
+  button { background: #007aff; color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 16px; width: 100%; margin-top: 8px; }
+</style>
+</head>
+<body>
+<h2>📡 iPhone 7 网络诊断工具</h2>
+<div id="step1" class="result pending">⏳ 步骤1: 测试 DNS 解析 (fetching via img)...</div>
+<div id="step2" class="result pending">⏳ 步骤2: 测试 XHR text/plain POST 到腾讯云...</div>
+<div id="step3" class="result pending">⏳ 步骤3: 测试 XHR application/json POST 到腾讯云...</div>
+<div id="step4" class="result pending">⏳ 步骤4: 测试 sendBeacon 到腾讯云...</div>
+<button onclick="runTests()">🔍 开始诊断</button>
+
+<script>
+var BASE = 'https://1316992450-7lwf0xnb7d.ap-guangzhou.tencentscf.com/';
+var testData = {time:'test', studentName:'iPhone7诊断', course:'Test', duration:'0s', total:0, accuracy:'0%', listening:0, reading:0, writing:0, speaking:0};
+
+function set(id, msg, cls) {
+  var el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'result ' + cls;
+}
+
+function xhrTest(id, contentType) {
+  return new Promise(function(resolve) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', BASE + '?t=' + Date.now(), true);
+    xhr.setRequestHeader('Content-Type', contentType);
+    xhr.timeout = 15000;
+    xhr.onload = function() {
+      set(id, '✅ 成功！状态=' + xhr.status + ' 返回=' + xhr.responseText.substring(0,80), 'ok');
+      resolve('ok');
+    };
+    xhr.onerror = function() {
+      set(id, '❌ 网络错误（可能是CORS或连接被拒绝）', 'err');
+      resolve('err');
+    };
+    xhr.ontimeout = function() {
+      set(id, '⏰ 超时（连接成功但服务器无响应）', 'err');
+      resolve('timeout');
+    };
+    try {
+      xhr.send(JSON.stringify(testData));
+    } catch(e) {
+      set(id, '❌ send()异常: ' + e.message, 'err');
+      resolve('exception');
+    }
+  });
+}
+
+function runTests() {
+  // Test 1: DNS via image (simple connectivity)
+  set('step1', '⏳ 测试 DNS/连通性...', 'pending');
+  var img = new Image();
+  img.onload = function() { set('step1', '✅ DNS解析 OK（图片加载成功）', 'ok'); };
+  img.onerror = function() { set('step1', '⚠️ DNS解析 OK 或图片404（但至少能连接）', 'ok'); };
+  img.src = 'https://1316992450-7lwf0xnb7d.ap-guangzhou.tencentscf.com/favicon.ico?t=' + Date.now();
+  setTimeout(function() {
+    if (document.getElementById('step1').className.indexOf('pending') > -1) {
+      set('step1', '❌ DNS 无法解析（完全无法连接服务器）', 'err');
+    }
+  }, 5000);
+
+  // Test 2: XHR text/plain
+  set('step2', '⏳ XHR text/plain 发送中...', 'pending');
+  xhrTest('step2', 'text/plain').then(function() {
+    // Test 3: XHR application/json
+    set('step3', '⏳ XHR application/json 发送中...', 'pending');
+    return xhrTest('step3', 'application/json');
+  }).then(function() {
+    // Test 4: sendBeacon
+    set('step4', '⏳ sendBeacon 发送中...', 'pending');
+    if (navigator.sendBeacon) {
+      var blob = new Blob([JSON.stringify(testData)], {type: 'application/json'});
+      var ok = navigator.sendBeacon(BASE + '?t=' + Date.now(), blob);
+      set('step4', ok ? '✅ sendBeacon 返回 true（数据已排队发送）' : '❌ sendBeacon 返回 false', ok ? 'ok' : 'err');
+    } else {
+      set('step4', '⚠️ 此浏览器不支持 sendBeacon', 'err');
+    }
+  });
+}
+
+// 自动运行
+window.onload = runTests;
+</script>
+</body>
+</html>
