@@ -7,8 +7,15 @@ const LARK_APP_SECRET = "om7RQokYqVlyQJOlIfdatcuFVQw85OIj";
 const LARK_APP_TOKEN = "Oy1dbiDS7aLIS8sqI1ZumqJSt8b";
 const LARK_TABLE_ID = "tblKpStf6IgveRvP";
 
-// 获取 Lark Access Token
+// 获取 Lark Access Token (带本地缓存，极大加速手机端)
 async function getLarkToken() {
+    // 1. 尝试从本地防读取未过期的 Token
+    const cached = JSON.parse(localStorage.getItem('merryLarkToken') || '{}');
+    if (cached.token && cached.expire && Date.now() < cached.expire) {
+        return cached.token;
+    }
+
+    // 2. 如果没有或者过期了，再去飞书请求
     const response = await fetch('https://lark-proxy.shenyoujuan387.workers.dev/open-apis/auth/v3/tenant_access_token/internal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -18,7 +25,31 @@ async function getLarkToken() {
         })
     });
     const data = await response.json();
+    
+    // 3. 将新 Token 写入本地保险箱（飞书Token有效期通常是2小时，我们缓存1.5小时）
+    if (data.tenant_access_token) {
+        localStorage.setItem('merryLarkToken', JSON.stringify({
+            token: data.tenant_access_token,
+            expire: Date.now() + 5400 * 1000 
+        }));
+    }
+    
     return data.tenant_access_token;
+}
+
+// 建立强大的：失败自动无感重试机制！！！
+async function fetchWithRetry(url, options, maxRetries = 2) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const res = await fetch(url, options);
+            if (res.ok || res.status === 400) return res; 
+        } catch (e) {
+            console.warn(`网络请求失败，正在进行第 ${i+1} 次无感重试...`, e);
+            if (i === maxRetries - 1) throw e;
+        }
+        // 等待 1 秒后再重试
+        await new Promise(r => setTimeout(r, 1000));
+    }
 }
 
 // 发送测试成绩到 Lark 多维表格（支持合并笔试和口试）
@@ -37,14 +68,14 @@ async function sendScoreToLark(scoreData) {
     let existingFields = {};
     
     try {
-        const searchRes = await fetch(searchUrl, { method: 'GET', headers });
+        const searchRes = await fetchWithRetry(searchUrl, { method: 'GET', headers }, 2);
         const searchData = await searchRes.json();
         if (searchData.code === 0 && searchData.data && searchData.data.items && searchData.data.items.length > 0) {
             existingRecordId = searchData.data.items[0].record_id;
             existingFields = searchData.data.items[0].fields || {};
         }
     } catch (e) {
-        console.warn("查询飞书中已存在记录失败:", e);
+        console.warn("查询飞书中已存在记录失败，本次改为直接新建行:", e);
     }
 
     let method = 'POST';
@@ -86,11 +117,11 @@ async function sendScoreToLark(scoreData) {
         }
     };
 
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
         method: method,
         headers: headers,
         body: JSON.stringify(payload)
-    });
+    }, 2);
     
     return await response.json();
 }
@@ -346,7 +377,7 @@ function submit() {
         console.warn("本地备份失败", e);
     }
 
-    const TIMEOUT_MS = 25000; // 延长到 25 秒，飞书的搜索和更新连在一起经常要 10 秒以上
+    const TIMEOUT_MS = 40000; // 终极保险：给 Safari 留足 40 秒时间的慢吞吞网速容忍度
     const submissionPromise = sendScoreToLark(scoreData);
     const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('TIMEOUT_ERROR')), TIMEOUT_MS)
