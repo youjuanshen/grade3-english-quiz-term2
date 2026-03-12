@@ -21,33 +21,77 @@ async function getLarkToken() {
     return data.tenant_access_token;
 }
 
-// 发送测试成绩到 Lark 多维表格
+// 发送测试成绩到 Lark 多维表格（支持合并笔试和口试）
 async function sendScoreToLark(scoreData) {
     const token = await getLarkToken();
-    const response = await fetch(
-        `https://lark-proxy.shenyoujuan387.workers.dev/open-apis/bitable/v1/apps/${LARK_APP_TOKEN}/tables/${LARK_TABLE_ID}/records`,
-        {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                fields: {
-                    "时间": scoreData.time,
-                    "姓名": scoreData.studentName,
-                    "课程": scoreData.course,
-                    "用时": scoreData.duration,
-                    "总分": scoreData.total,
-                    "正确率": scoreData.accuracy,
-                    "听力": scoreData.listening,
-                    "阅读": scoreData.reading,
-                    "写作": scoreData.writing,
-                    "口语": scoreData.speaking
-                }
-            })
+    const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+    };
+
+    // 1. 查找是否已经存在该学生、该课程的记录
+    const filterStr = `CurrentValue.[姓名]="${scoreData.studentName}"&&CurrentValue.[课程]="${scoreData.course}"`;
+    const searchUrl = `https://lark-proxy.shenyoujuan387.workers.dev/open-apis/bitable/v1/apps/${LARK_APP_TOKEN}/tables/${LARK_TABLE_ID}/records?filter=${encodeURIComponent(filterStr)}`;
+    
+    let existingRecordId = null;
+    let existingFields = {};
+    
+    try {
+        const searchRes = await fetch(searchUrl, { method: 'GET', headers });
+        const searchData = await searchRes.json();
+        if (searchData.code === 0 && searchData.data && searchData.data.items && searchData.data.items.length > 0) {
+            existingRecordId = searchData.data.items[0].record_id;
+            existingFields = searchData.data.items[0].fields || {};
         }
-    );
+    } catch (e) {
+        console.warn("查询飞书中已存在记录失败:", e);
+    }
+
+    let method = 'POST';
+    let url = `https://lark-proxy.shenyoujuan387.workers.dev/open-apis/bitable/v1/apps/${LARK_APP_TOKEN}/tables/${LARK_TABLE_ID}/records`;
+    
+    // 合并成绩逻辑
+    let mergedTotal = scoreData.total;
+    let newListening = scoreData.listening;
+    let newReading = scoreData.reading;
+    let newWriting = scoreData.writing;
+    let newSpeaking = scoreData.speaking;
+
+    if (existingRecordId) {
+        method = 'PUT'; // 存在则更新
+        url = `${url}/${existingRecordId}`;
+        
+        // 保留或者合并已有的成绩
+        newListening = newListening > 0 ? newListening : (existingFields['听力'] || 0);
+        newReading = newReading > 0 ? newReading : (existingFields['阅读'] || 0);
+        newWriting = newWriting > 0 ? newWriting : (existingFields['写作'] || 0);
+        newSpeaking = newSpeaking > 0 ? newSpeaking : (existingFields['口语'] || 0);
+        
+        // 重新计算总分和正确率
+        mergedTotal = newListening + newReading + newWriting + newSpeaking;
+    }
+
+    const payload = {
+        fields: {
+            "时间": scoreData.time,      // 这里改用时间戳，修复 DatetimeFieldConvFail 报错
+            "姓名": scoreData.studentName,
+            "课程": scoreData.course,
+            "用时": scoreData.duration,
+            "总分": mergedTotal,
+            "正确率": mergedTotal + "%",   // 因为满分一直是100，直接用总分加%就是正确率
+            "听力": newListening,
+            "阅读": newReading,
+            "写作": newWriting,
+            "口语": newSpeaking
+        }
+    };
+
+    const response = await fetch(url, {
+        method: method,
+        headers: headers,
+        body: JSON.stringify(payload)
+    });
+    
     return await response.json();
 }
 const SPEAKING_RUBRIC = [
@@ -276,10 +320,10 @@ function submit() {
     const studentName = document.getElementById('studentNameDisplay').innerText;
 
     const scoreData = {
-        time: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
+        time: Date.now(), // 改用时间戳数字 (修复了之前的 DatetimeFieldConvFail 时间格式报错)
         studentName: studentName,
-        course: "[下学期] " + currentData.title + (currentMode === 'speaking' ? ' (口试)' : ' (笔试)'),
-        duration: "完成", // 由于前端没计算具体时间，给个默认值
+        course: "[下学期] " + currentData.title, // 去掉括号(笔试)/(口试)，才能匹配到同一行
+        duration: "完成", 
         total: totalScore,
         accuracy: percentNum + "%",
         listening: currentMode === 'written' ? scoreL : 0,
@@ -294,7 +338,7 @@ function submit() {
     let savedRecords = JSON.parse(localStorage.getItem('merryQuizRecords') || '[]');
     savedRecords.push({
         ...scoreData,
-        submitTime: scoreData.time 
+        submitTime: new Date().toLocaleString('zh-CN') // 本地存储依旧存人能看懂的时间
     });
     localStorage.setItem('merryQuizRecords', JSON.stringify(savedRecords));
 
