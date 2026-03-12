@@ -346,7 +346,7 @@ function submit() {
         console.warn("本地备份失败", e);
     }
 
-    const TIMEOUT_MS = 15000;
+    const TIMEOUT_MS = 25000; // 延长到 25 秒，飞书的搜索和更新连在一起经常要 10 秒以上
     const submissionPromise = sendScoreToLark(scoreData);
     const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('TIMEOUT_ERROR')), TIMEOUT_MS)
@@ -355,19 +355,19 @@ function submit() {
     // 调用 Lark 接口并增加超时防护
     Promise.race([submissionPromise, timeoutPromise])
         .then(response => {
-            if (response.code === 0) {
+            if (response && response.code === 0) {
                 console.log("✅ 飞书多维表格提交成功！", response);
                 showFinalUI_v2(totalScore, maxScore, feedback, studentName, true);
             } else {
                 console.error("❌ 飞书多维表格报错：", response);
-                throw new Error(response.msg || "字段不匹配或其他飞书后台拒绝接收的错误");
+                throw new Error((response && response.msg) ? response.msg : "网络连接中断");
             }
         })
         .catch(error => {
             console.error("Submission failed:", error);
-            let errMsg = "❌ 提交飞书报错：" + error.message;
+            let errMsg = "❌ 提交通信报错，请检查网络：" + error.message;
             if (error.message === 'TIMEOUT_ERROR') {
-                errMsg = "❌ 提交超时，网络连接很不稳定。但成绩已备份。";
+                errMsg = "❌ 提交超时网络连接很不稳定。但成绩已安全备份在本地！";
             }
             showFinalUI_v2(totalScore, maxScore, feedback, studentName, false, errMsg);
         });
