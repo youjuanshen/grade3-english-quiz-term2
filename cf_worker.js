@@ -39,12 +39,12 @@ export default {
                  "姓名": scoreData.studentName,
                  "课程": scoreData.course,
                  "用时": scoreData.duration,
-                 "总分": scoreData.total,
+                 "总分": Number(scoreData.total), // 强制转换为数字
                  "正确率": scoreData.accuracy,
-                 "听力": scoreData.listening,
-                 "阅读": scoreData.reading,
-                 "写作": scoreData.writing,
-                 "口语": scoreData.speaking
+                 "听力": Number(scoreData.listening), // 强制转换为数字
+                 "阅读": Number(scoreData.reading), // 强制转换为数字
+                 "写作": Number(scoreData.writing), // 强制转换为数字
+                 "口语": Number(scoreData.speaking) // 强制转换为数字
              }
          };
 
