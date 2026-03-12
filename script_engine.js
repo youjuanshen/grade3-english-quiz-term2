@@ -7,35 +7,7 @@ const LARK_APP_SECRET = "om7RQokYqVlyQJOlIfdatcuFVQw85OIj";
 const LARK_APP_TOKEN = "Oy1dbiDS7aLIS8sqI1ZumqJSt8b";
 const LARK_TABLE_ID = "tblKpStf6IgveRvP";
 
-// 获取 Lark Access Token (带本地缓存，极大加速手机端)
-async function getLarkToken() {
-    // 1. 尝试从本地防读取未过期的 Token
-    const cached = JSON.parse(localStorage.getItem('merryLarkToken') || '{}');
-    if (cached.token && cached.expire && Date.now() < cached.expire) {
-        return cached.token;
-    }
-
-    // 2. 如果没有或者过期了，再去飞书请求
-    const response = await fetch('https://lark-proxy.shenyoujuan387.workers.dev/open-apis/auth/v3/tenant_access_token/internal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            app_id: LARK_APP_ID,
-            app_secret: LARK_APP_SECRET
-        })
-    });
-    const data = await response.json();
-    
-    // 3. 将新 Token 写入本地保险箱（飞书Token有效期通常是2小时，我们缓存1.5小时）
-    if (data.tenant_access_token) {
-        localStorage.setItem('merryLarkToken', JSON.stringify({
-            token: data.tenant_access_token,
-            expire: Date.now() + 5400 * 1000 
-        }));
-    }
-    
-    return data.tenant_access_token;
-}
+// 本地 Token 代码已经移除，转移至云端 Worker 处理
 
 // 建立强大的：失败自动无感重试机制！！！（增加了单次请求超时控制针对老旧设备）
 async function fetchWithRetry(url, options, maxRetries = 2, timeoutMs = 8000) {
@@ -57,36 +29,17 @@ async function fetchWithRetry(url, options, maxRetries = 2, timeoutMs = 8000) {
     }
 }
 
-// 发送测试成绩到 Lark 多维表格（极速直连版本：不搜索，全模式直接推送数据！）
+// 发送测试成绩到 Lark 多维表格（极速直连版本：将重活交给服务器，手机只请求一次！）
 async function sendScoreToLark(scoreData) {
-    const token = await getLarkToken();
-    const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-    };
-
-    const url = `https://lark-proxy.shenyoujuan387.workers.dev/open-apis/bitable/v1/apps/${LARK_APP_TOKEN}/tables/${LARK_TABLE_ID}/records`;
-
-    const payload = {
-        fields: {
-            "时间": scoreData.time,
-            "姓名": scoreData.studentName,
-            "课程": scoreData.course,
-            "用时": scoreData.duration,
-            "总分": scoreData.total,
-            "正确率": scoreData.accuracy,
-            "听力": scoreData.listening,
-            "阅读": scoreData.reading,
-            "写作": scoreData.writing,
-            "口语": scoreData.speaking
-        }
-    };
+    const url = `https://lark-proxy.shenyoujuan387.workers.dev/submit-score`;
 
     const response = await fetchWithRetry(url, {
         method: 'POST',
-        headers: headers,
-        body: JSON.stringify(payload)
-    }, 2, 12000); // 真正提交数据的请求给宽裕的12秒单次时间
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(scoreData)
+    }, 2, 20000); // 真正提交数据的请求给手机端宽裕的 20 秒单次时间
     
     return await response.json();
 }
