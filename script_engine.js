@@ -374,31 +374,86 @@ function submit() {
         console.warn("本地备份失败", e);
     }
 
-    const TIMEOUT_MS = 60000; // 终极保险：外层容忍度拉满到 60 秒
-    const submissionPromise = sendScoreToLark(scoreData);
-    const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('TIMEOUT_ERROR')), TIMEOUT_MS)
-    );
+    // ==================================================================
+    // 智能双通道提交策略：
+    // 通道1: sendBeacon（iOS 12 iPhone 7 唯一可用通道，诊断已证实）
+    // 通道2: XHR（新设备通道，能获得服务器确认）
+    // ==================================================================
+    var submitUrl = 'https://lark-proxy.shenyoujuan387.workers.dev/submit-score';
+    var beaconSent = false;
 
-    // 调用 Lark 接口并增加超时防护
-    Promise.race([submissionPromise, timeoutPromise])
-        .then(response => {
-            if (response && response.code === 0) {
-                console.log("✅ 飞书多维表格提交成功！", response);
-                showFinalUI_v2(totalScore, maxScore, feedback, studentName, true);
-            } else {
-                console.error("❌ 飞书多维表格报错：", response);
-                throw new Error((response && response.msg) ? response.msg : "网络连接中断");
+    // 先尝试 sendBeacon（对旧iPhone必定成功）
+    try {
+        if (navigator.sendBeacon) {
+            var blob = new Blob([JSON.stringify(scoreData)], {type: 'application/json'});
+            beaconSent = navigator.sendBeacon(submitUrl, blob);
+            console.log('📡 sendBeacon 结果:', beaconSent);
+        }
+    } catch(e) {
+        console.warn('sendBeacon 异常:', e);
+    }
+
+    // 再尝试 XHR 获取服务器确认（新设备能成功，旧iPhone会超时但不影响）
+    var xhrDone = false;
+    try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', submitUrl, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.timeout = 15000;
+
+        xhr.onload = function() {
+            if (xhrDone) return;
+            xhrDone = true;
+            try {
+                var data = JSON.parse(xhr.responseText);
+                if (data && data.code === 0) {
+                    console.log('✅ XHR 确认飞书已收到！', data);
+                    showFinalUI_v2(totalScore, maxScore, feedback, studentName, true);
+                } else {
+                    console.warn('⚠️ XHR 飞书返回异常:', data);
+                    showFinalUI_v2(totalScore, maxScore, feedback, studentName, beaconSent,
+                        beaconSent ? '' : '⚠️ 服务器返回异常，请联系沈老师确认成绩');
+                }
+            } catch(e) {
+                showFinalUI_v2(totalScore, maxScore, feedback, studentName, beaconSent,
+                    beaconSent ? '' : '⚠️ 回复数据格式异常');
             }
-        })
-        .catch(error => {
-            console.error("Submission failed:", error);
-            let errMsg = "❌ 提交通信报错，请检查网络：" + error.message;
-            if (error.message === 'TIMEOUT_ERROR') {
-                errMsg = "❌ 糟糕，旧版手机似乎又卡住了 (XHR)。不过别担心，成绩已在本地安全备份！";
-            }
-            showFinalUI_v2(totalScore, maxScore, feedback, studentName, false, errMsg);
-        });
+        };
+
+        xhr.onerror = function() {
+            if (xhrDone) return;
+            xhrDone = true;
+            console.warn('XHR 网络错误，但 sendBeacon 状态:', beaconSent);
+            showFinalUI_v2(totalScore, maxScore, feedback, studentName, beaconSent,
+                beaconSent ? '' : '❌ 网络连接失败，成绩已存本地，请联系沈老师');
+        };
+
+        xhr.ontimeout = function() {
+            if (xhrDone) return;
+            xhrDone = true;
+            console.warn('XHR 超时，但 sendBeacon 状态:', beaconSent);
+            showFinalUI_v2(totalScore, maxScore, feedback, studentName, beaconSent,
+                beaconSent ? '' : '❌ 网络超时，成绩已存本地，请联系沈老师');
+        };
+
+        xhr.send(JSON.stringify(scoreData));
+    } catch(e) {
+        // XHR 完全失败，依赖 sendBeacon
+        if (!xhrDone) {
+            xhrDone = true;
+            showFinalUI_v2(totalScore, maxScore, feedback, studentName, beaconSent,
+                beaconSent ? '' : '❌ 浏览器通信异常，成绩已存本地');
+        }
+    }
+
+    // 安全网：如果 15 秒内 XHR 既没成功也没失败（极端情况），强制显示结果
+    setTimeout(function() {
+        if (!xhrDone) {
+            xhrDone = true;
+            showFinalUI_v2(totalScore, maxScore, feedback, studentName, beaconSent,
+                beaconSent ? '' : '⚠️ 等待超时，成绩已存本地');
+        }
+    }, 16000);
 }
 
 function showFinalUI_v2(totalScore, maxScore, feedback, name, success, errorMessage = "") {
