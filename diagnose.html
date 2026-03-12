@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络诊断工具</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 20px; background: #f5f5f5; }
+        .card { background: white; border-radius: 12px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .pass { color: #4caf50; font-weight: bold; }
+        .fail { color: #f44336; font-weight: bold; }
+        .wait { color: #ff9800; font-weight: bold; }
+        .log { font-size: 12px; color: #666; margin: 5px 0; word-break: break-all; }
+        button { background: #2196F3; color: white; border: none; padding: 15px 30px; border-radius: 25px; font-size: 18px; width: 100%; margin: 10px 0; }
+        h2 { text-align: center; color: #333; }
+    </style>
+</head>
+<body>
+    <h2>🔍 iPhone 7 网络诊断</h2>
+    <p style="text-align:center; color:#666;">点击下方按钮，自动检测网络各环节</p>
+    <button onclick="runAllTests()">开始全面诊断 🚀</button>
+    <div id="results"></div>
+
+    <script>
+        var results = document.getElementById('results');
+        
+        function addResult(title, status, detail) {
+            var cls = status === 'pass' ? 'pass' : (status === 'fail' ? 'fail' : 'wait');
+            var icon = status === 'pass' ? '✅' : (status === 'fail' ? '❌' : '⏳');
+            var card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = '<div class="' + cls + '">' + icon + ' ' + title + '</div><div class="log">' + detail + '</div>';
+            results.appendChild(card);
+            return card;
+        }
+
+        function updateResult(card, title, status, detail) {
+            var cls = status === 'pass' ? 'pass' : (status === 'fail' ? 'fail' : 'wait');
+            var icon = status === 'pass' ? '✅' : (status === 'fail' ? '❌' : '⏳');
+            card.innerHTML = '<div class="' + cls + '">' + icon + ' ' + title + '</div><div class="log">' + detail + '</div>';
+        }
+
+        function runAllTests() {
+            results.innerHTML = '';
+            
+            // 测试0: 浏览器信息
+            var ua = navigator.userAgent;
+            addResult('浏览器信息', 'pass', ua);
+
+            // 测试1: 简单 GET 请求（测试基本连通性）
+            test1_simpleGet();
+        }
+
+        function test1_simpleGet() {
+            var card = addResult('测试1: GET 连通性', 'wait', '正在测试能否连接到 Cloudflare Worker...');
+            var start = Date.now();
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'https://lark-proxy.shenyoujuan387.workers.dev/', true);
+            xhr.timeout = 15000;
+            
+            xhr.onload = function() {
+                var ms = Date.now() - start;
+                updateResult(card, '测试1: GET 连通性', 'pass', 
+                    '连接成功! 状态码=' + xhr.status + ', 耗时=' + ms + 'ms, 回复长度=' + xhr.responseText.length + '字节');
+                test2_optionsPreflight();
+            };
+            xhr.onerror = function() {
+                var ms = Date.now() - start;
+                updateResult(card, '测试1: GET 连通性', 'fail', 
+                    '连接失败! 耗时=' + ms + 'ms。可能是 DNS/TLS/防火墙问题');
+                test2_optionsPreflight();
+            };
+            xhr.ontimeout = function() {
+                updateResult(card, '测试1: GET 连通性', 'fail', 
+                    '连接超时 (15秒)! 网络极慢或被拦截');
+                test2_optionsPreflight();
+            };
+            xhr.send();
+        }
+
+        function test2_optionsPreflight() {
+            var card = addResult('测试2: CORS 预检请求', 'wait', '正在测试 OPTIONS 预检...');
+            var start = Date.now();
+            var xhr = new XMLHttpRequest();
+            xhr.open('OPTIONS', 'https://lark-proxy.shenyoujuan387.workers.dev/submit-score', true);
+            xhr.timeout = 10000;
+            
+            xhr.onload = function() {
+                var ms = Date.now() - start;
+                updateResult(card, '测试2: CORS 预检请求', 'pass', 
+                    'CORS 正常! 状态码=' + xhr.status + ', 耗时=' + ms + 'ms');
+                test3_postSubmit();
+            };
+            xhr.onerror = function() {
+                var ms = Date.now() - start;
+                updateResult(card, '测试2: CORS 预检请求', 'fail', 
+                    'CORS 预检失败! 耗时=' + ms + 'ms。这可能是超时的根本原因！');
+                test3_postSubmit();
+            };
+            xhr.ontimeout = function() {
+                updateResult(card, '测试2: CORS 预检请求', 'fail', 
+                    'CORS 预检超时 (10秒)! 浏览器可能不支持或被拦截');
+                test3_postSubmit();
+            };
+            xhr.send();
+        }
+
+        function test3_postSubmit() {
+            var card = addResult('测试3: POST 提交成绩(真实测试)', 'wait', '正在模拟真实提交...');
+            var start = Date.now();
+            
+            var testData = {
+                time: new Date().toLocaleString('zh-CN'),
+                studentName: '诊断测试_请删除',
+                course: '[诊断] 网络测试',
+                duration: '0秒',
+                total: 0,
+                accuracy: '0%',
+                listening: 0,
+                reading: 0,
+                writing: 0,
+                speaking: 0
+            };
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://lark-proxy.shenyoujuan387.workers.dev/submit-score', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.timeout = 30000;
+
+            xhr.onload = function() {
+                var ms = Date.now() - start;
+                var responseText = xhr.responseText;
+                try {
+                    var data = JSON.parse(responseText);
+                    if (data.code === 0) {
+                        updateResult(card, '测试3: POST 提交成绩', 'pass',
+                            '🎉 提交成功! 耗时=' + ms + 'ms, 记录ID=' + (data.data && data.data.record ? data.data.record.record_id : '未知'));
+                    } else {
+                        updateResult(card, '测试3: POST 提交成绩', 'fail',
+                            '服务器拒绝! 耗时=' + ms + 'ms, 错误码=' + data.code + ', 消息=' + data.msg);
+                    }
+                } catch(e) {
+                    updateResult(card, '测试3: POST 提交成绩', 'fail',
+                        '返回数据解析失败! 耗时=' + ms + 'ms, 原始回复=' + responseText.substring(0, 200));
+                }
+                test4_beacon();
+            };
+
+            xhr.onerror = function() {
+                var ms = Date.now() - start;
+                updateResult(card, '测试3: POST 提交成绩', 'fail',
+                    '网络错误! 耗时=' + ms + 'ms。iPhone 7 就是卡在了这一步！');
+                test4_beacon();
+            };
+
+            xhr.ontimeout = function() {
+                var ms = Date.now() - start;
+                updateResult(card, '测试3: POST 提交成绩', 'fail',
+                    '超时 (30秒)! 数据可能已经发出但未等到回复。耗时=' + ms + 'ms');
+                test4_beacon();
+            };
+
+            xhr.send(JSON.stringify(testData));
+        }
+
+        function test4_beacon() {
+            var card;
+            if (navigator.sendBeacon) {
+                var testData2 = {
+                    time: new Date().toLocaleString('zh-CN'),
+                    studentName: 'Beacon测试_请删除',
+                    course: '[诊断] Beacon测试',
+                    duration: '0秒', total: 0, accuracy: '0%',
+                    listening: 0, reading: 0, writing: 0, speaking: 0
+                };
+                var blob = new Blob([JSON.stringify(testData2)], {type: 'application/json'});
+                var ok = navigator.sendBeacon('https://lark-proxy.shenyoujuan387.workers.dev/submit-score', blob);
+                card = addResult('测试4: sendBeacon', ok ? 'pass' : 'fail',
+                    ok ? 'sendBeacon 已接受数据! 请去飞书后台查看是否出现"Beacon测试"记录' : 'sendBeacon 被浏览器拒绝');
+            } else {
+                card = addResult('测试4: sendBeacon', 'fail', '此浏览器不支持 sendBeacon');
+            }
+
+            // 最终总结
+            addResult('诊断完成', 'pass', 
+                '请截图本页面发给开发者。重点关注测试3的结果：如果显示"网络错误"则是连接问题，如果显示"超时"则数据可能已发送成功只是等回复等太久。');
+        }
+    </script>
+</body>
+</html>
