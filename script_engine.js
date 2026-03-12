@@ -320,7 +320,7 @@ function submit() {
     const studentName = document.getElementById('studentNameDisplay').innerText;
 
     const scoreData = {
-        time: Date.now(), // 改用时间戳数字 (修复了之前的 DatetimeFieldConvFail 时间格式报错)
+        time: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }), // 这个字段在你的飞书表里其实是个文本而不是日期类型
         studentName: studentName,
         course: "[下学期] " + currentData.title, // 去掉括号(笔试)/(口试)，才能匹配到同一行
         duration: "完成", 
