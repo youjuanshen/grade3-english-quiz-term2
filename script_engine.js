@@ -9,43 +9,62 @@ const LARK_TABLE_ID = "tblKpStf6IgveRvP";
 
 // 本地 Token 代码已经移除，转移至云端 Worker 处理
 
-async function fetchWithRetry(url, options, maxRetries = 2, timeoutMs = 20000) {
-    for (let i = 0; i < maxRetries; i++) {
-        let timeoutId;
-        try {
-            const fetchPromise = fetch(url, options);
-            const timeoutPromise = new Promise((_, reject) => {
-                timeoutId = setTimeout(() => reject(new Error('TIMEOUT_ERROR')), timeoutMs);
-            });
-            // 加上独立超时针管，避免老手机卡死一直等
-            const res = await Promise.race([fetchPromise, timeoutPromise]);
-            clearTimeout(timeoutId);
-            
-            if (res.ok || res.status === 400) return res; 
-            throw new Error(`Server returned ${res.status}`);
-        } catch (e) {
-            clearTimeout(timeoutId);
-            console.warn(`网络请求失败(${e.message})，正在进行第 ${i+1} 次无感重试...`);
-            if (i === maxRetries - 1) throw e;
-        }
-        // 等待 1 秒后再重试
-        await new Promise(r => setTimeout(r, 800));
-    }
+// ==================================================================
+// 终极兼容方案：完全抛弃 fetch，使用原始 XMLHttpRequest (XHR)
+// XHR 自 2006 年起内置于所有浏览器，iPhone 7 的 iOS 10+ 完美支持
+// ==================================================================
+function xhrPost(url, data, timeoutMs) {
+    return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.timeout = timeoutMs || 20000;
+
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    resolve(JSON.parse(xhr.responseText));
+                } catch(e) {
+                    reject(new Error('JSON_PARSE_ERROR'));
+                }
+            } else {
+                reject(new Error('SERVER_' + xhr.status));
+            }
+        };
+
+        xhr.onerror = function() {
+            reject(new Error('NETWORK_ERROR'));
+        };
+
+        xhr.ontimeout = function() {
+            reject(new Error('TIMEOUT_ERROR'));
+        };
+
+        xhr.send(JSON.stringify(data));
+    });
 }
 
-// 发送测试成绩到 Lark 多维表格（极速直连版本：将重活交给服务器，手机只请求一次！）
-async function sendScoreToLark(scoreData) {
-    const url = `https://lark-proxy.shenyoujuan387.workers.dev/submit-score`;
+// 发送测试成绩到 Lark（XHR 版本：手机只发一次请求，最多重试 3 次）
+function sendScoreToLark(scoreData) {
+    var url = 'https://lark-proxy.shenyoujuan387.workers.dev/submit-score';
+    var attempt = 0;
+    var maxAttempts = 3;
 
-    const response = await fetchWithRetry(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(scoreData)
-    }, 2, 20000); // 真正提交数据的请求给手机端宽裕的 20 秒单次时间
-    
-    return await response.json();
+    function tryOnce() {
+        attempt++;
+        console.log('[XHR] 尝试第 ' + attempt + ' 次发送成绩...');
+        return xhrPost(url, scoreData, 20000).catch(function(err) {
+            console.warn('[XHR] 第 ' + attempt + ' 次失败: ' + err.message);
+            if (attempt < maxAttempts) {
+                return new Promise(function(resolve) {
+                    setTimeout(resolve, 1000);
+                }).then(tryOnce);
+            }
+            throw err;
+        });
+    }
+
+    return tryOnce();
 }
 const SPEAKING_RUBRIC = [
     "[1分] 需较多提示，仅能说出零散单词",
@@ -355,7 +374,7 @@ function submit() {
         console.warn("本地备份失败", e);
     }
 
-    const TIMEOUT_MS = 40000; // 终极保险：给 Safari 留足 40 秒时间的慢吞吞网速容忍度
+    const TIMEOUT_MS = 60000; // 终极保险：外层容忍度拉满到 60 秒
     const submissionPromise = sendScoreToLark(scoreData);
     const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('TIMEOUT_ERROR')), TIMEOUT_MS)
@@ -376,7 +395,7 @@ function submit() {
             console.error("Submission failed:", error);
             let errMsg = "❌ 提交通信报错，请检查网络：" + error.message;
             if (error.message === 'TIMEOUT_ERROR') {
-                errMsg = "❌ 提交超时网络连接很不稳定。但成绩已安全备份在本地！";
+                errMsg = "❌ 糟糕，旧版手机似乎又卡住了 (XHR)。不过别担心，成绩已在本地安全备份！";
             }
             showFinalUI_v2(totalScore, maxScore, feedback, studentName, false, errMsg);
         });
