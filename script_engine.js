@@ -46,7 +46,7 @@ function xhrPost(url, data, timeoutMs) {
 
 // 发送测试成绩到 Lark（XHR 版本：手机只发一次请求，最多重试 3 次）
 function sendScoreToLark(scoreData) {
-    var url = 'https://lark-proxy.shenyoujuan387.workers.dev/submit-score';
+    var url = 'https://1316992450-7lwf0xnb7d.ap-guangzhou.tencentscf.com/';
     var attempt = 0;
     var maxAttempts = 3;
 
@@ -376,10 +376,10 @@ function submit() {
 
     // ==================================================================
     // 智能双通道提交策略：
-    // 通道1: sendBeacon（iOS 12 iPhone 7 唯一可用通道，诊断已证实）
+    // 通道1: sendBeacon（iOS 12 iPhone 7 唯一可用通道，已用国内腾讯云代理）
     // 通道2: XHR（新设备通道，能获得服务器确认）
     // ==================================================================
-    var submitUrl = 'https://lark-proxy.shenyoujuan387.workers.dev/submit-score';
+    var submitUrl = 'https://1316992450-7lwf0xnb7d.ap-guangzhou.tencentscf.com/';
     var beaconSent = false;
 
     // 先尝试 sendBeacon（对旧iPhone必定成功）
