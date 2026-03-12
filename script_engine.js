@@ -384,7 +384,7 @@ function submit() {
     try {
         var xhr = new XMLHttpRequest();
         xhr.open('POST', submitUrl, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Content-Type', 'text/plain'); // 避免 iOS 12 触发 CORS 预检
         xhr.timeout = 20000;
 
         xhr.onload = function() {
