@@ -9,18 +9,22 @@ const LARK_TABLE_ID = "tblKpStf6IgveRvP";
 
 // 本地 Token 代码已经移除，转移至云端 Worker 处理
 
-// 建立强大的：失败自动无感重试机制！！！（增加了单次请求超时控制针对老旧设备）
-async function fetchWithRetry(url, options, maxRetries = 2, timeoutMs = 8000) {
+async function fetchWithRetry(url, options, maxRetries = 2, timeoutMs = 20000) {
     for (let i = 0; i < maxRetries; i++) {
+        let timeoutId;
         try {
             const fetchPromise = fetch(url, options);
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('TIMEOUT_ERROR')), timeoutMs)
-            );
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error('TIMEOUT_ERROR')), timeoutMs);
+            });
             // 加上独立超时针管，避免老手机卡死一直等
             const res = await Promise.race([fetchPromise, timeoutPromise]);
+            clearTimeout(timeoutId);
+            
             if (res.ok || res.status === 400) return res; 
+            throw new Error(`Server returned ${res.status}`);
         } catch (e) {
+            clearTimeout(timeoutId);
             console.warn(`网络请求失败(${e.message})，正在进行第 ${i+1} 次无感重试...`);
             if (i === maxRetries - 1) throw e;
         }

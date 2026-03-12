@@ -8,7 +8,9 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>综合挑战 (笔试+口试) - 三年级下册</title>
-    <link rel="stylesheet" href="style.css?v=2.7">
+    <script>
+        document.write('<link rel="stylesheet" href="style.css?t=' + Date.now() + '">');
+    </script>
 </head>
 
 <body>
@@ -115,7 +117,9 @@
     </div>
 
     <!-- 脚本引入 -->
-    <script src="script_engine.js?v=2.7"></script>
+    <script>
+        document.write('<script src="script_engine.js?t=' + Date.now() + '"><\/script>');
+    </script>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const requestedMode = urlParams.get('mode') || 'combined';
