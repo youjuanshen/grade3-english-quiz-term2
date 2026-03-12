@@ -335,27 +335,41 @@ function submit() {
     console.log("📤 Submitting to Lark Bitable / LocalStorage:", scoreData);
 
     // 【新增强力备份机制】：不管网络好不好，强制无条件先存到本地！
-    let savedRecords = JSON.parse(localStorage.getItem('merryQuizRecords') || '[]');
-    savedRecords.push({
-        ...scoreData,
-        submitTime: new Date().toLocaleString('zh-CN') // 本地存储依旧存人能看懂的时间
-    });
-    localStorage.setItem('merryQuizRecords', JSON.stringify(savedRecords));
+    try {
+        let savedRecords = JSON.parse(localStorage.getItem('merryQuizRecords') || '[]');
+        savedRecords.push({
+            ...scoreData,
+            submitTime: new Date().toLocaleString('zh-CN') // 本地存储依旧存人能看懂的时间
+        });
+        localStorage.setItem('merryQuizRecords', JSON.stringify(savedRecords));
+    } catch (e) {
+        console.warn("本地备份失败", e);
+    }
 
-    // 调用 Lark 接口
-    sendScoreToLark(scoreData)
+    const TIMEOUT_MS = 15000;
+    const submissionPromise = sendScoreToLark(scoreData);
+    const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT_ERROR')), TIMEOUT_MS)
+    );
+
+    // 调用 Lark 接口并增加超时防护
+    Promise.race([submissionPromise, timeoutPromise])
         .then(response => {
             if (response.code === 0) {
                 console.log("✅ 飞书多维表格提交成功！", response);
                 showFinalUI_v2(totalScore, maxScore, feedback, studentName, true);
             } else {
                 console.error("❌ 飞书多维表格报错：", response);
-                throw new Error(response.msg || "字段不匹配或其他错误");
+                throw new Error(response.msg || "字段不匹配或其他飞书后台拒绝接收的错误");
             }
         })
         .catch(error => {
             console.error("Submission failed:", error);
-            showFinalUI_v2(totalScore, maxScore, feedback, studentName, false, "❌ 提交飞书报错（可能没有'姓名'列等）：" + error.message);
+            let errMsg = "❌ 提交飞书报错：" + error.message;
+            if (error.message === 'TIMEOUT_ERROR') {
+                errMsg = "❌ 提交超时，网络连接很不稳定。但成绩已备份。";
+            }
+            showFinalUI_v2(totalScore, maxScore, feedback, studentName, false, errMsg);
         });
 }
 
