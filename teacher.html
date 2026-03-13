@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>缺考查询 · 沈老师</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'PingFang SC', sans-serif;
+    background: #f2f4f7;
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 16px 16px;
+    text-align: center;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .header p { font-size: 13px; opacity: 0.85; }
+
+  .controls {
+    background: white;
+    padding: 16px;
+    margin: 12px;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .controls label { font-size: 13px; color: #666; display: block; margin-bottom: 6px; }
+  .controls select, .controls input {
+    width: 100%; padding: 10px 12px; border: 1.5px solid #e0e0e0;
+    border-radius: 10px; font-size: 15px; color: #333;
+    background: #fafafa; margin-bottom: 10px; appearance: none;
+  }
+  .btn-query {
+    width: 100%; padding: 13px; background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; border: none; border-radius: 12px; font-size: 16px;
+    font-weight: 700; cursor: pointer; letter-spacing: 1px;
+  }
+  .btn-query:active { opacity: 0.85; transform: scale(0.99); }
+
+  .loading { text-align: center; padding: 30px; color: #888; font-size: 15px; }
+
+  .summary-cards {
+    display: flex; gap: 10px; margin: 12px;
+  }
+  .card {
+    flex: 1; border-radius: 14px; padding: 14px 10px; text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .card.total { background: white; }
+  .card.done { background: #e8f8f0; }
+  .card.missing { background: #fff0f0; }
+  .card .num { font-size: 30px; font-weight: 800; }
+  .card .label { font-size: 12px; color: #666; margin-top: 4px; }
+  .card.done .num { color: #27ae60; }
+  .card.missing .num { color: #e74c3c; }
+
+  .section {
+    background: white; margin: 0 12px 12px;
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .section-header {
+    padding: 12px 16px; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .section-header.missing-h { color: #e74c3c; }
+  .section-header.done-h { color: #27ae60; }
+
+  .student-item {
+    display: flex; align-items: center; padding: 11px 16px;
+    border-bottom: 1px solid #f8f8f8; font-size: 15px;
+  }
+  .student-item:last-child { border-bottom: none; }
+  .badge {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; margin-right: 12px; flex-shrink: 0;
+  }
+  .badge.miss { background: #ffe5e5; }
+  .badge.done { background: #e5f9ee; }
+  .student-num { color: #bbb; font-size: 12px; width: 20px; }
+  .submit-time { margin-left: auto; font-size: 12px; color: #aaa; }
+
+  .empty { padding: 24px; text-align: center; color: #aaa; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 缺考查询</h1>
+  <p>三年级英语周测 · 沈老师专用</p>
+</div>
+
+<div class="controls">
+  <label>选择课程</label>
+  <select id="courseSelect">
+    <option value="">-- 请选择当前考试课程 --</option>
+    <option>U1L3</option>
+    <option>U1L4</option>
+    <option>U2L1</option>
+    <option>U2L2</option>
+    <option>U2L3</option>
+    <option>U2L4</option>
+    <option>U3L1</option>
+    <option>U3L2</option>
+    <option>U3L3</option>
+    <option>U3L4</option>
+    <option>U4L1</option>
+    <option>U4L2</option>
+    <option>U4L3</option>
+    <option>U4L4</option>
+  </select>
+  <label>查询时间范围（天，默认7天内）</label>
+  <input type="number" id="daysInput" value="7" min="1" max="30">
+  <button class="btn-query" onclick="query()">🔍 查询缺考情况</button>
+</div>
+
+<div id="output"></div>
+
+<script>
+// =============== 全班名单 (27人) ===============
+var STUDENTS = [
+  '张宇豪','张佳寒','张睿渊','张羽韬','张美茹','张嘉钦','卢梦婷',
+  '张悦萱','张语涵','张英豪','张志鹏','张智杰','张梓婷','张品琪',
+  '张诺依','张雨泽','张依彤','张艺楠','张思彤','张子豪','张梓亦',
+  '张皓鑫','张雨欣','张如欣','张柏涵','张梓纯','张泽鑫'
+];
+
+// =============== 读取飞书成绩记录 ===============
+var PROXY = 'https://1316992450-7lwf0xnb7d.ap-guangzhou.tencentscf.com/';
+
+function query() {
+  var course = document.getElementById('courseSelect').value;
+  var days = parseInt(document.getElementById('daysInput').value) || 7;
+  if (!course) { alert('请先选择课程！'); return; }
+
+  document.getElementById('output').innerHTML = '<div class="loading">⏳ 正在查询飞书数据...</div>';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', PROXY, true);
+  xhr.setRequestHeader('Content-Type', 'text/plain');
+  xhr.timeout = 20000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      renderResult(resp, course, days);
+    } catch(e) {
+      document.getElementById('output').innerHTML = '<div class="loading">❌ 数据解析失败</div>';
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    document.getElementById('output').innerHTML = '<div class="loading">❌ 网络连接失败，请重试</div>';
+  };
+  xhr.send(JSON.stringify({ action: 'query', course: course, days: days }));
+}
+
+function renderResult(resp, course, days) {
+  if (!resp || resp.code !== 0) {
+    document.getElementById('output').innerHTML = '<div class="loading">❌ 查询失败: ' + (resp && resp.msg || '未知错误') + '</div>';
+    return;
+  }
+
+  var records = resp.data || [];
+  // 过滤指定课程
+  var submitted = {};
+  records.forEach(function(r) {
+    var name = r.studentName || r['姓名'] || '';
+    var course_r = r.course || r['课程'] || '';
+    var time_r = r.time || r['时间'] || '';
+    if (course_r.indexOf(course) >= 0 || course_r === course) {
+      submitted[name] = time_r;
+    }
+  });
+
+  var doneList = [], missList = [];
+  STUDENTS.forEach(function(s) {
+    if (submitted[s]) doneList.push({name: s, time: submitted[s]});
+    else missList.push(s);
+  });
+
+  var html = '';
+
+  // 汇总卡片
+  html += '<div class="summary-cards">';
+  html += '<div class="card total"><div class="num">' + STUDENTS.length + '</div><div class="label">全班总人数</div></div>';
+  html += '<div class="card done"><div class="num">' + doneList.length + '</div><div class="label">已考 ✅</div></div>';
+  html += '<div class="card missing"><div class="num">' + missList.length + '</div><div class="label">未考 ❌</div></div>';
+  html += '</div>';
+
+  // 未考名单
+  html += '<div class="section">';
+  html += '<div class="section-header missing-h">❌ 尚未参加考试（' + missList.length + '人）</div>';
+  if (missList.length === 0) {
+    html += '<div class="empty">🎉 全班同学都已完成测试！</div>';
+  } else {
+    missList.forEach(function(s, i) {
+      html += '<div class="student-item"><div class="badge miss">😴</div><span>' + s + '</span></div>';
+    });
+  }
+  html += '</div>';
+
+  // 已考名单
+  html += '<div class="section">';
+  html += '<div class="section-header done-h">✅ 已完成考试（' + doneList.length + '人）</div>';
+  if (doneList.length === 0) {
+    html += '<div class="empty">暂无已考记录</div>';
+  } else {
+    doneList.forEach(function(s) {
+      html += '<div class="student-item"><div class="badge done">✅</div><span>' + s.name + '</span><span class="submit-time">' + s.time + '</span></div>';
+    });
+  }
+  html += '</div>';
+
+  document.getElementById('output').innerHTML = html;
+}
+</script>
+</body>
+</html>
