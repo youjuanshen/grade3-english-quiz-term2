@@ -184,6 +184,7 @@ function renderResult(resp, course, days) {
   }
 
   var records = resp.data || [];
+  var submitted = {}; // 存放已提交的学生
   records.forEach(function(r) {
     // 飞书里的名字可能是 "3. 张睿渊"，我们需要去掉前面的数字和空格，只提取纯汉字姓名
     var rawName = String(r.studentName || r['姓名'] || '').trim();
