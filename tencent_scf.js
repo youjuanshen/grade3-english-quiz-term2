@@ -108,25 +108,21 @@ exports.main_handler = async function(event, context) {
                 pageToken = resp.data.page_token || '';
             }
 
-            // 只保留指定课程、时间范围内的记录
-            var filtered = allRecords
-                .map(function(item) {
-                    var f = item.fields || {};
-                    return {
-                        studentName: f['姓名'] || '',
-                        course: f['课程'] || '',
-                        time: f['时间'] || ''
-                    };
-                })
-                .filter(function(r) {
-                    var matchCourse = course ? r.course.indexOf(course) >= 0 : true;
-                    return matchCourse;
-                });
+            // 返回全部记录，由前端做智能课程匹配
+            // （飞书里的课程名是长文本如 "[下学期] Unit 1 Lesson 1..."，服务端无法直接与 "U1L1" 匹配）
+            var allMapped = allRecords.map(function(item) {
+                var f = item.fields || {};
+                return {
+                    studentName: String(f['姓名'] || ''),
+                    course:      String(f['课程'] || ''),
+                    time:        String(f['时间'] || '')
+                };
+            }).filter(function(r) { return r.studentName !== ''; });
 
             return {
                 statusCode: 200,
                 headers: cors,
-                body: JSON.stringify({ code: 0, data: filtered })
+                body: JSON.stringify({ code: 0, data: allMapped })
             };
         }
 
