@@ -138,10 +138,15 @@
 <script>
 // =============== 全班名单 (27人) ===============
 var STUDENTS = [
-  '张宇豪','张佳寒','张睿渊','张羽韬','张美茹','张嘉钦','卢梦婷',
-  '张悦萱','张语涵','张英豪','张志鹏','张智杰','张梓婷','张品琪',
-  '张诺依','张雨泽','张依彤','张艺楠','张思彤','张子豪','张梓亦',
-  '张皓鑫','张雨欣','张如欣','张柏涵','张梓纯','张泽鑫'
+  {id: 1, name: '张宇豪'}, {id: 2, name: '张佳寒'}, {id: 3, name: '张睿渊'},
+  {id: 4, name: '张羽韬'}, {id: 5, name: '张美茹'}, {id: 6, name: '张嘉钦'},
+  {id: 7, name: '卢梦婷'}, {id: 8, name: '张悦萱'}, {id: 9, name: '张语涵'},
+  {id: 10, name: '张英豪'}, {id: 11, name: '张志鹏'}, {id: 12, name: '张智杰'},
+  {id: 13, name: '张梓婷'}, {id: 14, name: '张品琪'}, {id: 15, name: '张诺依'},
+  {id: 16, name: '张雨泽'}, {id: 17, name: '张依彤'}, {id: 18, name: '张艺楠'},
+  {id: 19, name: '张思彤'}, {id: 20, name: '张子豪'}, {id: 21, name: '张梓亦'},
+  {id: 22, name: '张皓鑫'}, {id: 23, name: '张雨欣'}, {id: 24, name: '张如欣'},
+  {id: 25, name: '张柏涵'}, {id: 26, name: '张梓纯'}, {id: 27, name: '张泽鑫'}
 ];
 
 // =============== 读取飞书成绩记录 ===============
@@ -179,20 +184,47 @@ function renderResult(resp, course, days) {
   }
 
   var records = resp.data || [];
-  // 过滤指定课程
-  var submitted = {};
   records.forEach(function(r) {
-    var name = r.studentName || r['姓名'] || '';
-    var course_r = r.course || r['课程'] || '';
+    // 飞书里的名字可能是 "3. 张睿渊"，我们需要去掉前面的数字和空格，只提取纯汉字姓名
+    var rawName = String(r.studentName || r['姓名'] || '').trim();
+    var nameMatch = rawName.match(/[\u4e00-\u9fa5]+$/);
+    var cleanName = nameMatch ? nameMatch[0] : rawName; // 例如: "3. 张睿渊" -> "张睿渊"
+
+    // 飞书里的课程可能是 "[下学期] Unit 1 Lesson 1: This is a bear."
+    // 发过来的 target course 是 "U1L1"
+    var rawCourse = String(r.course || r['课程'] || '').toLowerCase();
+    
+    // 把类似 "[下学期] Unit 1 Lesson 1..." 转换成 "u1l1" 来进行精准匹配
+    var unitMatch = rawCourse.match(/unit?\s*(\d)/i) || rawCourse.match(/u(\d)/i);
+    var lessonMatch = rawCourse.match(/lesson?\s*(\d)/i) || rawCourse.match(/l(\d)/i);
+    
+    var convertedCourse = "";
+    if (unitMatch && lessonMatch) {
+      convertedCourse = "u" + unitMatch[1] + "l" + lessonMatch[1];
+    } else if (rawCourse.indexOf('review 1') >= 0 || rawCourse.indexOf('review1') >= 0) {
+      convertedCourse = "review 1";
+    } else if (rawCourse.indexOf('review 2') >= 0 || rawCourse.indexOf('review2') >= 0) {
+      convertedCourse = "review 2";
+    } else if (rawCourse.indexOf('期末') >= 0) {
+      convertedCourse = "期末测试";
+    }
+
     var time_r = r.time || r['时间'] || '';
-    if (course_r.indexOf(course) >= 0 || course_r === course) {
-      submitted[name] = time_r;
+    
+    var targetCourseLower = course.toLowerCase();
+    
+    // 如果转换后的课程能匹对上
+    if (convertedCourse && convertedCourse === targetCourseLower) {
+      submitted[cleanName] = time_r;
+    } else if (rawCourse.indexOf(targetCourseLower) >= 0 || rawCourse === targetCourseLower) {
+      // 兼容旧模式或部分手打的模式
+      submitted[cleanName] = time_r;
     }
   });
 
   var doneList = [], missList = [];
   STUDENTS.forEach(function(s) {
-    if (submitted[s]) doneList.push({name: s, time: submitted[s]});
+    if (submitted[s.name]) doneList.push({id: s.id, name: s.name, time: submitted[s.name]});
     else missList.push(s);
   });
 
@@ -211,8 +243,8 @@ function renderResult(resp, course, days) {
   if (missList.length === 0) {
     html += '<div class="empty">🎉 全班同学都已完成测试！</div>';
   } else {
-    missList.forEach(function(s, i) {
-      html += '<div class="student-item"><div class="badge miss">😴</div><span>' + s + '</span></div>';
+    missList.forEach(function(s) {
+      html += '<div class="student-item"><div class="badge miss">😴</div><span class="student-num">' + s.id + '. </span><span style="margin-left:5px;">' + s.name + '</span></div>';
     });
   }
   html += '</div>';
@@ -224,7 +256,7 @@ function renderResult(resp, course, days) {
     html += '<div class="empty">暂无已考记录</div>';
   } else {
     doneList.forEach(function(s) {
-      html += '<div class="student-item"><div class="badge done">✅</div><span>' + s.name + '</span><span class="submit-time">' + s.time + '</span></div>';
+      html += '<div class="student-item"><div class="badge done">✅</div><span class="student-num">' + s.id + '. </span><span style="margin-left:5px;">' + s.name + '</span><span class="submit-time">' + s.time + '</span></div>';
     });
   }
   html += '</div>';
