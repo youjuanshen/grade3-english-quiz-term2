@@ -11,6 +11,13 @@
     background: #f2f4f7;
     min-height: 100vh;
   }
+  .app-container {
+    max-width: 500px;
+    margin: 0 auto;
+    background: #f2f4f7;
+    min-height: 100vh;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+  }
   .header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -89,6 +96,7 @@
 </style>
 </head>
 <body>
+<div class="app-container">
 
 <div class="header">
   <h1>📋 缺考查询</h1>
@@ -114,12 +122,12 @@
     <option>U4L3</option>
     <option>U4L4</option>
   </select>
-  <label>查询时间范围（天，默认7天内）</label>
-  <input type="number" id="daysInput" value="7" min="1" max="30">
   <button class="btn-query" onclick="query()">🔍 查询缺考情况</button>
 </div>
 
 <div id="output"></div>
+
+</div> <!-- end container -->
 
 <script>
 // =============== 全班名单 (27人) ===============
@@ -135,7 +143,7 @@ var PROXY = 'https://1316992450-7lwf0xnb7d.ap-guangzhou.tencentscf.com/';
 
 function query() {
   var course = document.getElementById('courseSelect').value;
-  var days = parseInt(document.getElementById('daysInput').value) || 7;
+  var days = 30; // 固定查询近30天的记录
   if (!course) { alert('请先选择课程！'); return; }
 
   document.getElementById('output').innerHTML = '<div class="loading">⏳ 正在查询飞书数据...</div>';
