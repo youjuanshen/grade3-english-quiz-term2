@@ -354,9 +354,9 @@ function submit() {
         duration: durationStr, 
         total: totalScore,
         accuracy: percentNum + "%",
-        listening: currentMode === 'written' ? scoreL : 0,
-        reading: currentMode === 'written' ? scoreR : 0,
-        writing: currentMode === 'written' ? scoreW : 0,
+        listening: (currentMode === 'written' || currentMode === 'combined') ? scoreL : 0,
+        reading: (currentMode === 'written' || currentMode === 'combined') ? scoreR : 0,
+        writing: (currentMode === 'written' || currentMode === 'combined') ? scoreW : 0,
         speaking: speakingScore
     };
 
