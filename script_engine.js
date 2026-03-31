@@ -15,6 +15,8 @@ const LARK_TABLE_ID = "tblKpStf6IgveRvP";
 // ==================================================================
 function xhrPost(url, data, timeoutMs) {
     return new Promise(function(resolve, reject) {
+        // 把密钥混入body中，避免自定义header触发CORS预检
+        data._key = 'merry-quiz-2026-secret';
         var xhr = new XMLHttpRequest();
         xhr.open('POST', url, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
@@ -380,6 +382,9 @@ function submit() {
     // ==================================================================
     var submitUrl = 'https://1316992450-7lwf0xnb7d.ap-guangzhou.tencentscf.com/';
     var xhrDone = false;
+
+    // 把密钥混入scoreData中
+    scoreData._key = 'merry-quiz-2026-secret';
 
     try {
         var xhr = new XMLHttpRequest();
