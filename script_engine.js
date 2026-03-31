@@ -1,13 +1,7 @@
 // ==================================================================
 // 🐾 script_engine.js V2.3 - 三年级下册专用 (增强稳定性版)
 // ==================================================================
-// ===== Lark 多维表格配置 =====
-const LARK_APP_ID = "cli_a93bc13364f88060";
-const LARK_APP_SECRET = "om7RQokYqVlyQJOlIfdatcuFVQw85OIj";
-const LARK_APP_TOKEN = "Oy1dbiDS7aLIS8sqI1ZumqJSt8b";
-const LARK_TABLE_ID = "tblKpStf6IgveRvP";
-
-// 本地 Token 代码已经移除，转移至云端 Worker 处理
+// 飞书配置已移至云端云函数，前端不暴露密钥
 
 // ==================================================================
 // 终极兼容方案：完全抛弃 fetch，使用原始 XMLHttpRequest (XHR)
