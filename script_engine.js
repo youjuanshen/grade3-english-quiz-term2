@@ -217,7 +217,7 @@ function renderQuestion() {
             html += `</div>`;
         } else if (q.type === 'drag-sort') {
             html += `<div style="margin:10px 0; color:#666; font-size:14px;">(点击单词进行排序)</div>`;
-            html += `<div class="drag-area" id="target-${q.qNum}">${(answers['Q' + q.qNum] || "").split(' ').filter(x => x).map(w => `<span class="word-chip active">${w}</span>`).join('')}</div>`;
+            html += `<div class="drag-area" id="target-${q.qNum}">${(answers['Q' + q.qNum] || "").split(' ').filter(x => x).map(w => `<span class="word-chip active" onclick="moveWord(this, 'target-${q.qNum}', 'source-${q.qNum}', '${q.qNum}')">${w}</span>`).join('')}</div>`;
             html += `<div class="drag-area" id="source-${q.qNum}">`;
             let remaining = [...q.words];
             (answers['Q' + q.qNum] || "").split(' ').forEach(w => { let i = remaining.indexOf(w); if (i > -1) remaining.splice(i, 1); });
